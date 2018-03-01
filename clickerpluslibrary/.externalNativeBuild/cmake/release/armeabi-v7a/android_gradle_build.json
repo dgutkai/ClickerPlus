@@ -1,0 +1,41 @@
+
+{
+	"buildFiles" : 
+	[
+		"/Users/lanmi/Desktop/github_clone/ClickerPlus/clickerpluslibrary/CMakeLists.txt"
+	],
+	"cFileExtensions" : [ "c" ],
+	"cleanCommands" : 
+	[
+		"/Users/lanmi/Library/Android/sdk/cmake/3.6.4111459/bin/cmake --build /Users/lanmi/Desktop/github_clone/ClickerPlus/clickerpluslibrary/.externalNativeBuild/cmake/release/armeabi-v7a --target clean"
+	],
+	"libraries" : 
+	{
+		"native-lib-Release-armeabi-v7a" : 
+		{
+			"abi" : "armeabi-v7a",
+			"artifactName" : "native-lib",
+			"buildCommand" : "/Users/lanmi/Library/Android/sdk/cmake/3.6.4111459/bin/cmake --build /Users/lanmi/Desktop/github_clone/ClickerPlus/clickerpluslibrary/.externalNativeBuild/cmake/release/armeabi-v7a --target native-lib",
+			"buildType" : "release",
+			"files" : 
+			[
+				
+				{
+					"flags" : "  --target=armv7-none-linux-androideabi --gcc-toolchain=/Users/lanmi/Library/Android/sdk/ndk-bundle/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64 --sysroot=/Users/lanmi/Library/Android/sdk/ndk-bundle/sysroot -Dnative_lib_EXPORTS -I../../../../src/main/cpp  -isystem /Users/lanmi/Library/Android/sdk/ndk-bundle/sysroot/usr/include/arm-linux-androideabi -D__ANDROID_API__=19 -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -fno-integrated-as -mthumb -Wa,--noexecstack -Wformat -Werror=format-security  -Os -DNDEBUG  -fPIC      -c ",
+					"src" : "/Users/lanmi/Desktop/github_clone/ClickerPlus/clickerpluslibrary/src/main/cpp/native-lib.c",
+					"workingDirectory" : "/Users/lanmi/Desktop/github_clone/ClickerPlus/clickerpluslibrary/.externalNativeBuild/cmake/release/armeabi-v7a"
+				}
+			],
+			"output" : "/Users/lanmi/Desktop/github_clone/ClickerPlus/clickerpluslibrary/build/intermediates/cmake/release/obj/armeabi-v7a/libnative-lib.so",
+			"toolchain" : "1751187021533157907"
+		}
+	},
+	"toolchains" : 
+	{
+		"1751187021533157907" : 
+		{
+			"cCompilerExecutable" : "/Users/lanmi/Library/Android/sdk/ndk-bundle/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang",
+			"cppCompilerExecutable" : "/Users/lanmi/Library/Android/sdk/ndk-bundle/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
+		}
+	}
+}

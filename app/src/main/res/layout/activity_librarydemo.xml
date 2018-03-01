@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/pair_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="配对"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintRight_toLeftOf="@id/unpair_btn"
+        app:layout_constraintHorizontal_weight="1"
+        android:onClick="pairClick"
+        />
+    <Button
+        android:id="@+id/unpair_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="取消配对"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/pair_btn"
+        app:layout_constraintHorizontal_weight="1"
+        android:onClick="unpairClick"/>
+</android.support.constraint.ConstraintLayout>
