@@ -6,8 +6,8 @@ import android.bluetooth.BluetoothDevice
  * Created by lanmi on 2018/2/26.
  */
 interface ClickerPlusListener {
-    fun onConnect(device: BluetoothDevice)
-    fun onDisconnect(device: BluetoothDevice)
+    fun onConnect(deviceMac: String)
+    fun onDisconnect(deviceMac: String)
     fun onPair(state: ClickerPlus.ClickerPlusState)
     fun onCancelPair(state: ClickerPlus.ClickerPlusState)
     fun onConnectBack(state: ClickerPlus.ClickerPlusState)

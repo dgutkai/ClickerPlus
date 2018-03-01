@@ -26,4 +26,27 @@
         app:layout_constraintLeft_toRightOf="@id/pair_btn"
         app:layout_constraintHorizontal_weight="1"
         android:onClick="unpairClick"/>
+    <Button
+        android:id="@+id/find_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="查找设备"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/battery_btn"
+        app:layout_constraintTop_toBottomOf="@id/pair_btn"
+        app:layout_constraintHorizontal_weight="1"
+        android:onClick="findClick"
+        />
+    <Button
+        android:id="@+id/battery_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="获取电量"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/find_btn"
+        app:layout_constraintTop_toBottomOf="@id/unpair_btn"
+        app:layout_constraintHorizontal_weight="1"
+        android:onClick="batteryClick"/>
 </android.support.constraint.ConstraintLayout>

@@ -10,11 +10,11 @@ object BLECMDUtil {
     private val VERIFY_CODE1 = 0xFE.toByte() // 指令头（验证码1）
     private val VERIFY_CODE2 = 0xCF.toByte() // 指令头（验证码2）
 
-    private val CMDID_PAIR = 0x5001       // 配对连接
-    private val CMDID_UNPAIR = 0x5002       // 取消配对连接
-    private val CMDID_CONNECTBACK = 0x5003      // 回连
-    private val CMDID_FIND = 0x5004        // 查找设备
-    private val CMDID_BATTERY = 0x5010      // 获取电池电量
+    val CMDID_PAIR = 0x5001       // 配对连接
+    val CMDID_UNPAIR = 0x5002       // 取消配对连接
+    val CMDID_CONNECTBACK = 0x5003      // 回连
+    val CMDID_FIND = 0x5004        // 查找设备
+    val CMDID_BATTERY = 0x5010      // 获取电池电量
     private var cmdIndex = 0
     /**
      * 指令解析结果
@@ -150,6 +150,26 @@ object BLECMDUtil {
 
     fun createBatteryCMD(): ByteArray{
         return packageCMD(CMDID_BATTERY, null)
+    }
+
+    fun parsePairCMD(data: ByteArray?): Boolean{
+        if (data != null && data.isNotEmpty()){
+            return data[0] == 1.toByte()
+        }
+        return false
+    }
+    fun parseUnpairCMD(data: ByteArray?): Boolean{
+        if (data != null && data.isNotEmpty()){
+            return data[0] == 1.toByte()
+        }
+        return false
+    }
+
+    fun parseConnectbackCMD(data: ByteArray?): Boolean{
+        if (data != null && data.isNotEmpty()){
+            return data[0] == 1.toByte()
+        }
+        return false
     }
 }
 

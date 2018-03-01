@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         mBluetoothClien = BluetoothClient(this)
-        ClickerPlus.mClickerPlusListener = mListener
+
 
         initDeviceListView()
         scanBleDevice()
@@ -126,60 +126,7 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    val mListener = object: ClickerPlusListener{
-        override fun onConnect(device: BluetoothDevice) {
-            Log.e(TAG, device.name + ":" + device.address + " OnConnect")
-        }
 
-        override fun onDisconnect(device: BluetoothDevice) {
-            Log.e(TAG, device.name + ":" + device.address + " onDisconnect")
-        }
-
-        override fun onPair(state: ClickerPlus.ClickerPlusState) {
-            Log.e(TAG, "onPair")
-        }
-
-        override fun onCancelPair(state: ClickerPlus.ClickerPlusState) {
-            Log.e(TAG, "onCancelPair")
-        }
-
-        override fun onConnectBack(state: ClickerPlus.ClickerPlusState) {
-            Log.e(TAG, "onConnectBack")
-        }
-
-        override fun onClick() {
-            Log.e(TAG, "onClick")
-        }
-
-        override fun onDoubleClick() {
-            Log.e(TAG, "onDoubleClick")
-        }
-
-        override fun onLongClick() {
-            Log.e(TAG, "onLongClick")
-        }
-
-        override fun onWeakup() {
-            Log.e(TAG, "onWeakup")
-        }
-
-        override fun onIdeaCapsule() {
-            Log.e(TAG, "onIdeaCapsule")
-        }
-
-        override fun onVoicePCM(data: ByteArray, isEnd: Boolean) {
-            Log.e(TAG, "onVoicePCM datalength = " + data.size)
-        }
-
-        override fun onIdeaPCM(data: ByteArray, isEnd: Boolean) {
-            Log.e(TAG, "onIdeaPCM datalength = " + data.size)
-        }
-
-        override fun onBatteryChange(percent: Int) {
-            Log.e(TAG, "onBatteryChange percent = " + percent)
-        }
-
-    }
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
