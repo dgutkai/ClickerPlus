@@ -21,7 +21,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="取消配对"
-        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintLeft_toRightOf="@id/pair_btn"
         app:layout_constraintHorizontal_weight="1"
@@ -49,4 +49,28 @@
         app:layout_constraintTop_toBottomOf="@id/unpair_btn"
         app:layout_constraintHorizontal_weight="1"
         android:onClick="batteryClick"/>
+
+    <Button
+        android:id="@+id/ota_btn4"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:onClick="ota4Click"
+        android:text="OTA升级4"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/ota_btn5"
+        app:layout_constraintTop_toBottomOf="@id/find_btn"
+        />
+
+    <Button
+        android:id="@+id/ota_btn5"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="OTA升级5"
+
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/battery_btn"
+        app:layout_constraintLeft_toRightOf="@id/ota_btn4"
+        android:onClick="ota5Click"/>
+
 </android.support.constraint.ConstraintLayout>

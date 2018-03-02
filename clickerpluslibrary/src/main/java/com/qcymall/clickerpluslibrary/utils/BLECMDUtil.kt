@@ -13,8 +13,21 @@ object BLECMDUtil {
     val CMDID_PAIR = 0x5001       // 配对连接
     val CMDID_UNPAIR = 0x5002       // 取消配对连接
     val CMDID_CONNECTBACK = 0x5003      // 回连
-    val CMDID_FIND = 0x5004        // 查找设备
-    val CMDID_BATTERY = 0x5010      // 获取电池电量
+    val CMDID_FIND = 0x5010        // 查找设备
+    val CMDID_BATTERY = 0x5011      // 获取电池电量
+    val CMDID_OTA = 0x5012      // OTA升级
+
+    val CMDID_WEAKUP = 0x5004       // 唤醒
+    val CMDID_CLICK = 0x5005        // 单击
+    val CMDID_DOUBLECLICK = 0x5006      // 双击
+    val CMDID_LONGPRESS = 0x5007        // 长按
+    val CMDID_IDEA = 0x5008     // 闪念胶囊
+    val CMDID_VOICESTART = 0x5009     // 语音PCM数据开始
+    val CMDID_VOICEPCM = 0x500A     // 语音PCM数据
+    val CMDID_VOICEEND = 0x500B     // 语音PCM数据结束
+    val CMDID_IDEASTART = 0x500C     // 闪念PCM数据开始
+    val CMDID_IDEAPCM = 0x500D     // 闪念PCM数据
+    val CMDID_IDEAEND = 0x500E     // 闪念PCM数据结束
     private var cmdIndex = 0
     /**
      * 指令解析结果
@@ -152,6 +165,10 @@ object BLECMDUtil {
         return packageCMD(CMDID_BATTERY, null)
     }
 
+    fun createOTACMD(): ByteArray{
+        return packageCMD(CMDID_OTA, null)
+    }
+
     fun parsePairCMD(data: ByteArray?): Boolean{
         if (data != null && data.isNotEmpty()){
             return data[0] == 1.toByte()
@@ -170,6 +187,35 @@ object BLECMDUtil {
             return data[0] == 1.toByte()
         }
         return false
+    }
+    fun parsePCMData(data: ByteArray?): HashMap<String, Any>{
+        if (data == null || data.isEmpty()) {
+            val resultMap = HashMap<String, Any>()
+            resultMap.put("index", 0)
+            resultMap.put("pcmData", ByteArray(0))
+            return resultMap
+        }
+        val index = getInt(data!![0], data[1])
+        val pcmData = ByteArray(data.size - 2)
+        System.arraycopy(data, 2, pcmData, 0, pcmData.size)
+        val resultMap = HashMap<String, Any>()
+        resultMap.put("index", index)
+        resultMap.put("pcmData", pcmData)
+        return resultMap
+    }
+    fun parseIdeaHeader(data: ByteArray?): String{
+        if (data != null && data.isNotEmpty()) {
+            val resultString = String(data!!)
+            return resultString
+        }else{
+            return ""
+        }
+    }
+    fun parseBatteryCMD(data: ByteArray?): Int{
+        if (data != null && data.isNotEmpty()){
+            return data[0].toInt()
+        }
+        return 0
     }
 }
 

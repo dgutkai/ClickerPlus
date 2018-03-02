@@ -1,10 +1,8 @@
 package com.qcymall.clickerpluslibrary
 
 import android.annotation.SuppressLint
-import android.app.Notification
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.os.Build
 import android.os.Handler
 import android.util.Log
 import com.inuker.bluetooth.library.BluetoothClient
@@ -15,12 +13,16 @@ import com.inuker.bluetooth.library.connect.options.BleConnectOptions
 import com.inuker.bluetooth.library.connect.response.BleConnectResponse
 import com.inuker.bluetooth.library.connect.response.BleNotifyResponse
 import com.inuker.bluetooth.library.connect.response.BleWriteResponse
-import com.inuker.bluetooth.library.model.BleGattCharacter
-import com.inuker.bluetooth.library.model.BleGattProfile
+import com.inuker.bluetooth.library.search.SearchRequest
+import com.inuker.bluetooth.library.search.SearchResult
+import com.inuker.bluetooth.library.search.response.SearchResponse
 import com.inuker.bluetooth.library.utils.BluetoothLog
 import com.inuker.bluetooth.library.utils.ByteUtils
-import com.qcymall.clickerpluslibrary.adpcm.AdpcmUtils
+import com.qcymall.clickerpluslibrary.dfu.DFUService
 import com.qcymall.clickerpluslibrary.utils.BLECMDUtil
+import no.nordicsemi.android.dfu.DfuProgressListenerAdapter
+import no.nordicsemi.android.dfu.DfuServiceInitiator
+import no.nordicsemi.android.dfu.DfuServiceListenerHelper
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -148,6 +150,128 @@ object ClickerPlus {
         return true
 
     }
+
+    fun otaDFU(context: Context, filePath: String): Boolean{
+        if (!isPair){
+            return false
+        }
+        if (!isConnect || mCurrentMac == null){
+            return false
+        }
+        mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
+                BLECMDUtil.createOTACMD(), response)
+        val h = Handler()
+        h.postDelayed({
+            val request = SearchRequest.Builder()
+                    .searchBluetoothLeDevice(3000, 3)   // 先扫BLE设备3次，每次3s
+                    .build()
+
+            mBluetoothClien!!.search(request, object : SearchResponse {
+                override fun onSearchStarted() {
+                    Log.e(TAG, "onSearchStarted")
+                }
+
+                override fun onDeviceFounded(device: SearchResult) {
+                    Log.e(TAG, "onDeviceFounded " + device.name + " " + device.address)
+                    if (device.name == "DfuTarg"){ // device.address == mCurrentMac &&
+                        mBluetoothClien!!.stopSearch()
+                        update(context, device.address, device.name, filePath)
+                    }
+
+                }
+
+                override fun onSearchStopped() {
+                }
+
+                override fun onSearchCanceled() {
+                }
+            })
+        }, 10000)
+        return true
+
+    }
+
+    private fun update(context: Context, deviceMac: String, deviceName: String, path: String){
+        DfuServiceListenerHelper.registerProgressListener(context, mDfuProgressListener)
+        val starter = DfuServiceInitiator(deviceMac)
+                .setDeviceName(deviceName)
+                .setKeepBond(false)
+                .setForceDfu(false)
+                .setPacketsReceiptNotificationsEnabled(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+                .setPacketsReceiptNotificationsValue(DfuServiceInitiator.DEFAULT_PRN_VALUE)
+                .setUnsafeExperimentalButtonlessServiceInSecureDfuEnabled(true)
+        starter.setZip(null, path)
+
+        starter.start(context, DFUService::class.java)
+    }
+
+    private val mDfuProgressListener = object : DfuProgressListenerAdapter() {
+        override fun onDeviceConnecting(deviceAddress: String?) {
+            Log.e("mDfuProgressListener", "onDeviceConnecting " + deviceAddress )
+        }
+
+        override fun onDfuProcessStarting(deviceAddress: String?) {
+            Log.e("mDfuProgressListener", "onDfuProcessStarting " + deviceAddress )
+            if (mClickerPlusListener != null) {
+                val h = Handler()
+                h.post {
+                    mClickerPlusListener!!.onOTAStart(deviceAddress!!)
+                }
+            }
+        }
+
+        override fun onEnablingDfuMode(deviceAddress: String?) {
+            Log.e("mDfuProgressListener", "onEnablingDfuMode " + deviceAddress )
+        }
+
+        override fun onFirmwareValidating(deviceAddress: String?) {
+            Log.e("mDfuProgressListener", "onFirmwareValidating " + deviceAddress )
+        }
+
+        override fun onDeviceDisconnecting(deviceAddress: String?) {
+            Log.e("mDfuProgressListener", "onDeviceDisconnecting " + deviceAddress )
+        }
+
+        override fun onDfuCompleted(deviceAddress: String?) {
+
+            Log.e("mDfuProgressListener", "onDfuCompleted " + deviceAddress )
+            if (mClickerPlusListener != null) {
+                val h = Handler()
+                h.post {
+                    mClickerPlusListener!!.onOTACompleted(deviceAddress!!)
+                }
+            }
+            val connectHandler = Handler()
+            connectHandler.postDelayed({ connectDevice() }, 500)
+
+        }
+
+        override fun onDfuAborted(deviceAddress: String?) {
+            Log.e("mDfuProgressListener", "onDfuAborted " + deviceAddress )
+        }
+
+        override fun onProgressChanged(deviceAddress: String?, percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
+            Log.e("mDfuProgressListener", "onProgressChanged " + deviceAddress + " progress:" + percent + " speed:" + speed +
+                    " avgSpeed:" + avgSpeed + " currentPart:" + currentPart + " partsTotal:" + partsTotal)
+            if (mClickerPlusListener != null) {
+                val h = Handler()
+                h.post {
+                    mClickerPlusListener!!.onOTAProgressChanged(deviceAddress!!, percent, speed, avgSpeed, currentPart, partsTotal)
+                }
+            }
+        }
+
+        override fun onError(deviceAddress: String?, error: Int, errorType: Int, message: String?) {
+            Log.e("mDfuProgressListener", "onError " + deviceAddress + " error:" + error + " errorType:" + errorType + " message:" + message)
+            if (mClickerPlusListener != null) {
+                val h = Handler()
+                h.post {
+                    mClickerPlusListener!!.onOTAError(deviceAddress!!, error, errorType, message)
+                }
+            }
+        }
+    }
+
     private val mConnectStatusListener = object : BleConnectStatusListener() {
         override fun onConnectStatusChanged(mac: String, status: Int) {
             BluetoothLog.e(String.format("DeviceDetailActivity onConnectStatusChanged %d in %s",
@@ -252,6 +376,83 @@ object ClickerPlus {
                             if (mClickerPlusListener != null) {
                                 h.post { mClickerPlusListener!!.onConnectBack(ClickerPlusState.fail) }
                             }
+                        }
+                    }
+                    BLECMDUtil.CMDID_WEAKUP -> {
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onWeakup() }
+                        }
+                    }
+                    BLECMDUtil.CMDID_CLICK -> {
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onClick() }
+                        }
+                    }
+                    BLECMDUtil.CMDID_DOUBLECLICK -> {
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onDoubleClick() }
+                        }
+                    }
+                    BLECMDUtil.CMDID_LONGPRESS -> {
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onLongPress() }
+                        }
+                    }
+                    BLECMDUtil.CMDID_IDEA -> {
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onIdeaCapsule() }
+                        }
+                    }
+                    BLECMDUtil.CMDID_VOICESTART -> {
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onVoicePCMStart() }
+                        }
+                    }
+                    BLECMDUtil.CMDID_VOICEPCM -> {
+                        val result = BLECMDUtil.parsePCMData(parseResult.data)
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onVoicePCM(result["pcmData"] as ByteArray, result["index"] as Int) }
+                        }
+                    }
+                    BLECMDUtil.CMDID_VOICEEND -> {
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onVoicePCMEnd() }
+                        }
+                    }
+                    BLECMDUtil.CMDID_IDEASTART -> {
+                        val result = BLECMDUtil.parseIdeaHeader(parseResult.data)
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onIdeaPCMStart(result) }
+                        }
+                    }
+                    BLECMDUtil.CMDID_IDEAPCM -> {
+                        val result = BLECMDUtil.parsePCMData(parseResult.data)
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onIdeaPCM(result["pcmData"] as ByteArray, result["index"] as Int) }
+                        }
+                    }
+                    BLECMDUtil.CMDID_IDEAEND -> {
+
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onIdeaPCMEnd(parseResult.data) }
+                        }
+                    }
+                    BLECMDUtil.CMDID_BATTERY -> {
+                        val result = BLECMDUtil.parseBatteryCMD(parseResult.data)
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onBatteryChange(result) }
                         }
                     }
 

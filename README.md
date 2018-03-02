@@ -15,7 +15,7 @@
 clicker+按键单击时调用。
 #### 5、onDoubleClick()
 clicker+按键双击时调用。
-#### 6、onLongClick()
+#### 6、onLongPress()
 clicker+按键长按时调用。
 #### 7、onWeakup()
 clicker+发送唤醒指令后调用。
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        override fun onLongClick() {
+        override fun onLongPress() {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
