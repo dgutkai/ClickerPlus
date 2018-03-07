@@ -1,6 +1,7 @@
 package com.qcymall.clickerplus
 
 import android.Manifest
+import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -70,13 +71,7 @@ class MainActivity : AppCompatActivity() {
         deviceData.clear()
         deviceAdapter.notifyDataSetChanged()
         refreshLayout.setRefreshing(true)
-        val request = SearchRequest.Builder()
-                .searchBluetoothLeDevice(3000, 3)   // 先扫BLE设备3次，每次3s
-                //                .searchBluetoothClassicDevice(5000) // 再扫经典蓝牙5s
-                //                .searchBluetoothLeDevice(2000)      // 再扫BLE设备2s
-                .build()
-
-        mBluetoothClien.search(request, object : SearchResponse {
+        ClickerPlus.scanDevice(object : SearchResponse {
             override fun onSearchStarted() {
 
             }
@@ -95,13 +90,14 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onSearchStopped() {
-                refreshLayout.setRefreshing(false)
+                refreshLayout.isRefreshing = false
             }
 
             override fun onSearchCanceled() {
-                refreshLayout.setRefreshing(false)
+                refreshLayout.isRefreshing = false
             }
         })
+
     }
 
     private val mBluetoothStateListener = object : BluetoothStateListener() {
@@ -119,7 +115,7 @@ class MainActivity : AppCompatActivity() {
             return false
         }
         for (data in deviceData) {
-            if (mac == data.get("mac")) {
+            if (mac == data["mac"]) {
                 return true
             }
         }
@@ -133,7 +129,7 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             1, 2 -> {
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.

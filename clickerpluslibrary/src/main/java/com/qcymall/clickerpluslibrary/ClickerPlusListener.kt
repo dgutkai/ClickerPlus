@@ -1,11 +1,13 @@
 package com.qcymall.clickerpluslibrary
 
 import android.bluetooth.BluetoothDevice
+import com.inuker.bluetooth.library.search.SearchResult
 
 /**
  * Created by lanmi on 2018/2/26.
  */
 interface ClickerPlusListener {
+
     fun onConnect(deviceMac: String)
     fun onDisconnect(deviceMac: String)
     fun onPair(state: ClickerPlus.ClickerPlusState)

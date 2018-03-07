@@ -63,6 +63,32 @@ object ClickerPlus {
 
     }
 
+    fun scanDevice(searchResponse: SearchResponse){
+        val request = SearchRequest.Builder()
+                .searchBluetoothLeDevice(3000, 3)   // 先扫BLE设备3次，每次3s
+                .build()
+
+        mBluetoothClien!!.search(request, object : SearchResponse {
+            override fun onSearchStarted() {
+                Log.e(TAG, "onSearchStarted")
+                searchResponse.onSearchStarted()
+            }
+
+            override fun onDeviceFounded(device: SearchResult) {
+                Log.e(TAG, "onDeviceFounded " + device.name + " " + device.address)
+                searchResponse.onDeviceFounded(device)
+
+            }
+
+            override fun onSearchStopped() {
+                searchResponse.onSearchStopped()
+            }
+
+            override fun onSearchCanceled() {
+                searchResponse.onSearchCanceled()
+            }
+        })
+    }
     private fun connect(macString: String): Boolean{
         if (isConnect && macString == mCurrentMac){
             return false

@@ -1,5 +1,6 @@
 package com.qcymall.clickerpluslibrary.utils
 
+import com.qcymall.clickerpluslibrary.adpcm.AdpcmUtils
 import kotlin.experimental.and
 
 /**
@@ -48,12 +49,12 @@ object BLECMDUtil {
      * @return 打包后的指令字符数组
      */
     fun packageCMD(cmdID: Int, data: ByteArray?): ByteArray {
-        var data = data
+        var datatemp = data
         if (data == null) {
-            data = ByteArray(0)
+            datatemp = ByteArray(0)
         }
-        val datalen = 12 + data.size
-        val packData = ByteArray(12 + data.size)
+        val datalen = 12 + datatemp!!.size
+        val packData = ByteArray(12 + datatemp.size)
         packData[0] = VERIFY_CODE1
         packData[1] = VERIFY_CODE2
         packData[2] = 0x00.toByte()
@@ -66,7 +67,7 @@ object BLECMDUtil {
         packData[9] = (cmdIndex and 0xff).toByte()
         packData[10] = 0x00.toByte()
         packData[11] = 0x00.toByte()
-        System.arraycopy(data, 0, packData, 12, data.size)
+        System.arraycopy(data, 0, packData, 12, datatemp.size)
         cmdIndex += 1
         return packData
     }
@@ -198,9 +199,11 @@ object BLECMDUtil {
         val index = getInt(data!![0], data[1])
         val pcmData = ByteArray(data.size - 2)
         System.arraycopy(data, 2, pcmData, 0, pcmData.size)
+        val resultData = ByteArray(pcmData.size * 4)
+        AdpcmUtils.adpcmDecoder(pcmData, resultData, pcmData.size)
         val resultMap = HashMap<String, Any>()
         resultMap.put("index", index)
-        resultMap.put("pcmData", pcmData)
+        resultMap.put("pcmData", resultData)
         return resultMap
     }
     fun parseIdeaHeader(data: ByteArray?): String{

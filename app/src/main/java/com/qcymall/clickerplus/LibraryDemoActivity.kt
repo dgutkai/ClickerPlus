@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.utils.ByteUtils
 import com.qcymall.clickerpluslibrary.ClickerPlus
 import com.qcymall.clickerpluslibrary.ClickerPlusListener
