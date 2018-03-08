@@ -8,6 +8,7 @@ import android.util.Log
 import com.inuker.bluetooth.library.BluetoothClient
 import com.inuker.bluetooth.library.Code.REQUEST_SUCCESS
 import com.inuker.bluetooth.library.Constants.STATUS_CONNECTED
+import com.inuker.bluetooth.library.beacon.Beacon
 import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener
 import com.inuker.bluetooth.library.connect.options.BleConnectOptions
 import com.inuker.bluetooth.library.connect.response.BleConnectResponse
@@ -76,6 +77,8 @@ object ClickerPlus {
 
             override fun onDeviceFounded(device: SearchResult) {
                 Log.e(TAG, "onDeviceFounded " + device.name + " " + device.address)
+                val beancom = Beacon(device.scanRecord)
+                Log.e(TAG, "onDeviceFounded " + beancom.toString())
                 searchResponse.onDeviceFounded(device)
 
             }
@@ -133,8 +136,11 @@ object ClickerPlus {
             mFlagID = spFlaginfo
             isSendFlag = false
             connect(spMacString)
+            return true
+        }else{
+            return false
         }
-        return true
+
     }
 
     /**
