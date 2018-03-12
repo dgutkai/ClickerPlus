@@ -1,6 +1,7 @@
 package com.qcymall.clickerpluslibrary.utils
 
 import com.qcymall.clickerpluslibrary.adpcm.AdpcmUtils
+import java.util.*
 import kotlin.experimental.and
 
 /**
@@ -17,6 +18,7 @@ object BLECMDUtil {
     val CMDID_FIND = 0x5010        // 查找设备
     val CMDID_BATTERY = 0x5011      // 获取电池电量
     val CMDID_OTA = 0x5012      // OTA升级
+    val CMDID_TIME = 0x5013     // 时间同步
 
     val CMDID_WEAKUP = 0x5004       // 唤醒
     val CMDID_CLICK = 0x5005        // 单击
@@ -170,6 +172,33 @@ object BLECMDUtil {
         return packageCMD(CMDID_OTA, null)
     }
 
+    fun createTimeCMD(): ByteArray{
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+        var way = calendar.get(Calendar.DAY_OF_WEEK)
+        // 默认是星期日为一个星期第一天，这里处理一下
+        if (way > 1) {
+            way -= 1
+        } else {
+            way = 7
+        }
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+        val second = calendar.get(Calendar.SECOND)
+        val rtc_data = ByteArray(8)
+        rtc_data[0] = (year and 0xff00 shr 8).toByte()
+        rtc_data[1] = (year and 0xff).toByte()
+        rtc_data[2] = month.toByte()
+        rtc_data[3] = day.toByte()
+        rtc_data[4] = hour.toByte()
+        rtc_data[5] = minute.toByte()
+        rtc_data[6] = second.toByte()
+        rtc_data[7] = way.toByte()
+        return packageCMD(CMDID_TIME, rtc_data);
+    }
+
     fun parsePairCMD(data: ByteArray?): Boolean{
         if (data != null && data.isNotEmpty()){
             return data[0] == 1.toByte()
@@ -184,6 +213,12 @@ object BLECMDUtil {
     }
 
     fun parseConnectbackCMD(data: ByteArray?): Boolean{
+        if (data != null && data.isNotEmpty()){
+            return data[0] == 1.toByte()
+        }
+        return false
+    }
+    fun parseTimeBackCMD(data: ByteArray?): Boolean{
         if (data != null && data.isNotEmpty()){
             return data[0] == 1.toByte()
         }

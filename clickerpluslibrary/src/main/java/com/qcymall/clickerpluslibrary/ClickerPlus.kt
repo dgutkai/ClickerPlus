@@ -33,9 +33,9 @@ import java.util.*
 object ClickerPlus {
 
     private val TAG = "ClickerPlus"
-    private val SERVICE_UUID = UUID.fromString("0000caa1-0000-1000-8000-00805f9b34fb")//  服务号
-    private val WRITE_UUID = UUID.fromString("0000cab1-0000-1000-8000-00805f9b34fb")//  写特征号
-    private val NOTIFICATION_UUID = UUID.fromString("0000cab2-0000-1000-8000-00805f9b34fb")//  写特征号
+    private val SERVICE_UUID = UUID.fromString("6e40caa1-b5a3-f393-e0a9-e50e24dcca9e")//  服务号
+    private val WRITE_UUID = UUID.fromString("6e40cab1-b5a3-f393-e0a9-e50e24dcca9e")//  写特征号
+    private val NOTIFICATION_UUID = UUID.fromString("6e40cab2-b5a3-f393-e0a9-e50e24dcca9e")//  写特征号
     private val PAIR_TIMEOUT = 10000L
     enum class ClickerPlusState{
         pairing,
@@ -78,8 +78,14 @@ object ClickerPlus {
             override fun onDeviceFounded(device: SearchResult) {
                 Log.e(TAG, "onDeviceFounded " + device.name + " " + device.address)
                 val beancom = Beacon(device.scanRecord)
-                Log.e(TAG, "onDeviceFounded " + beancom.toString())
-                searchResponse.onDeviceFounded(device)
+//                Log.e(TAG, "onDeviceFounded " + beancom.toString())
+                if (device.name == "Smartisan Clicker+"){
+                    val paritype = beancom.mBytes.last()
+                    if (paritype == 0x02.toByte()){
+                        searchResponse.onDeviceFounded(device)
+                    }
+                }
+
 
             }
 
@@ -363,7 +369,10 @@ object ClickerPlus {
                         val result = BLECMDUtil.parsePairCMD(parseResult.data)
                         val h = Handler()
                         if (result){
+
                             isPair = true
+                            mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
+                                    BLECMDUtil.createTimeCMD(), response)
                             setStringValueToSP(CommonAction.SP_CLICKER_PAIRED_MAC, mCurrentMac!!)
                             setStringValueToSP(CommonAction.SP_CLICKER_FLAGINFO, mFlagID!!)
                             if (mClickerPlusListener != null) {
@@ -485,6 +494,12 @@ object ClickerPlus {
                         if (mClickerPlusListener != null) {
                             val h = Handler()
                             h.post { mClickerPlusListener!!.onBatteryChange(result) }
+                        }
+                    }
+                    BLECMDUtil.CMDID_TIME -> {
+                        val result = BLECMDUtil.parseTimeBackCMD(parseResult.data)
+                        if (result){
+                            // 时间配置正确
                         }
                     }
 
