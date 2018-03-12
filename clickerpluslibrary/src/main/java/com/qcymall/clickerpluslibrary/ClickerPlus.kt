@@ -81,7 +81,7 @@ object ClickerPlus {
 //                Log.e(TAG, "onDeviceFounded " + beancom.toString())
                 if (device.name == "Smartisan Clicker+"){
                     val paritype = beancom.mBytes.last()
-                    if (paritype == 0x02.toByte()){
+                    if (paritype == 0x01.toByte()){
                         searchResponse.onDeviceFounded(device)
                     }
                 }
