@@ -1,7 +1,9 @@
 package com.qcymall.clickerplus
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -15,6 +17,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.SimpleAdapter
+import android.widget.Toast
 import com.inuker.bluetooth.library.BluetoothClient
 import com.inuker.bluetooth.library.beacon.Beacon
 import com.inuker.bluetooth.library.connect.listener.BluetoothStateListener
@@ -22,6 +25,7 @@ import com.inuker.bluetooth.library.search.SearchRequest
 import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.search.response.SearchResponse
 import com.inuker.bluetooth.library.utils.BluetoothLog
+import com.inuker.bluetooth.library.utils.ByteUtils
 import com.qcymall.clickerpluslibrary.ClickerPlus
 import com.qcymall.clickerpluslibrary.ClickerPlusListener
 import java.util.*
@@ -47,9 +51,10 @@ class MainActivity : AppCompatActivity() {
 
         mBluetoothClien = BluetoothClient(this)
 
-
+        ClickerPlus.mClickerPlusListener = mListener
         initDeviceListView()
         scanBleDevice()
+
     }
 
     private fun initDeviceListView() {
@@ -143,6 +148,108 @@ class MainActivity : AppCompatActivity() {
                 }
                 return
             }
+        }
+    }
+
+    val mListener = object: ClickerPlusListener {
+        @SuppressLint("SetTextI18n")
+        override fun onDataReceive(info: String) {
+        }
+
+        override fun onConnect(deviceMac: String) {
+            Log.e(TAG, deviceMac + " OnConnect")
+            val detialIntent = Intent(baseContext, LibraryDemoActivity::class.java)
+            val btAdapter = BluetoothAdapter.getDefaultAdapter()
+            val device = btAdapter.getRemoteDevice(deviceMac)
+            val data = HashMap<String, Any>()
+            data.put("name", device.name)
+            data.put("mac", device.address)
+            data.put("btdevice", device)
+            detialIntent.putExtra("data", data)
+            startActivity(detialIntent)
+        }
+
+        override fun onDisconnect(deviceMac: String) {
+            Log.e(TAG, deviceMac + " onDisconnect")
+        }
+
+        override fun onPair(state: ClickerPlus.ClickerPlusState) {
+            Log.e(TAG, "onPair " + state.name)
+
+
+        }
+
+        override fun onCancelPair(state: ClickerPlus.ClickerPlusState) {
+            Log.e(TAG, "onCancelPair " + state.name)
+
+        }
+
+        override fun onConnectBack(state: ClickerPlus.ClickerPlusState) {
+            Log.e(TAG, "onConnectBack " + state.name)
+
+        }
+
+        override fun onClick() {
+            Log.e(TAG, "onClick")
+        }
+
+        override fun onDoubleClick() {
+            Log.e(TAG, "onDoubleClick")
+        }
+
+        override fun onLongPress() {
+            Log.e(TAG, "onLongPress")
+        }
+
+        override fun onWeakup() {
+            Log.e(TAG, "onWeakup")
+        }
+
+        override fun onIdeaCapsule() {
+            Log.e(TAG, "onIdeaCapsule")
+        }
+        override fun onVoicePCMStart() {
+            Log.e(TAG, "onVoicePCMStart")
+        }
+
+        override fun onVoicePCMEnd() {
+            Log.e(TAG, "onVoicePCMEnd")
+        }
+        override fun onVoicePCM(data: ByteArray, index: Int) {
+            Log.e(TAG, String.format("onVoicePCM  current Index = %d, Voice PCM Data: %s", index, ByteUtils.byteToString(data)))
+
+        }
+
+        override fun onIdeaPCMStart(header: String) {
+            Log.e(TAG, "onIdeaPCMStart " + header)
+        }
+
+        override fun onIdeaPCMEnd(info: ByteArray?) {
+            Log.e(TAG, "onIdeaPCMEnd " + ByteUtils.byteToString(info))
+        }
+        override fun onIdeaPCM(data: ByteArray, index: Int) {
+            Log.e(TAG, String.format("onIdeaPCM  current Index = %d, Voice PCM Data: %s", index, ByteUtils.byteToString(data)))
+        }
+
+        override fun onBatteryChange(percent: Int) {
+            Log.e(TAG, "onBatteryChange percent = " + percent)
+        }
+
+        override fun onOTAStart(deviceMac: String) {
+            Log.e(TAG, deviceMac + " onOTAStart")
+        }
+
+        override fun onOTAProgressChanged(deviceMac: String, percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
+            Log.e(TAG, "onProgressChanged " + deviceMac + " progress:" + percent + " speed:" + speed +
+                    " avgSpeed:" + avgSpeed + " currentPart:" + currentPart + " partsTotal:" + partsTotal)
+        }
+
+        override fun onOTACompleted(deviceMac: String) {
+            Log.e(TAG, deviceMac + " onOTACompleted")
+        }
+
+        override fun onOTAError(deviceMac: String, error: Int, errorType: Int, message: String?) {
+            Log.e(TAG, "onError " + deviceMac + " error:" + error + " errorType:" + errorType + " message:" + message)
         }
     }
 }

@@ -318,11 +318,11 @@ object ClickerPlus {
             isConnect = status == STATUS_CONNECTED
             if (isConnect){
                 mCurrentMac = mac
-                if (isSendFlag){
-                    mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID, BLECMDUtil.createPariCMD(mFlagID!!), response)
-                }else{
-                    mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID, BLECMDUtil.createConnectBackCMD(mFlagID!!), response)
-                }
+//                if (isSendFlag){
+//                    mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID, BLECMDUtil.createPariCMD(mFlagID!!), response)
+//                }else{
+//                    mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID, BLECMDUtil.createConnectBackCMD(mFlagID!!), response)
+//                }
                 val timeoutHandler = Handler()
                 timeoutHandler.postDelayed({
                     if (!isPair && isConnect){
@@ -363,26 +363,35 @@ object ClickerPlus {
         override fun onNotify(service: UUID, character: UUID, value: ByteArray) {
             if (service == SERVICE_UUID && character == NOTIFICATION_UUID) {
                 Log.e(TAG, String.format("Notify: %s \n%d", ByteUtils.byteToString(value), Date().time))
+                if (mClickerPlusListener != null){
+                    val h = Handler()
+                    h.post { mClickerPlusListener!!.onDataReceive(String.format("Notify: %s -> %d\n", ByteUtils.byteToString(value), Date().time)) }
+                }
                 val parseResult = BLECMDUtil.parseCMD(value) ?: return
                 when (parseResult.id){
                     BLECMDUtil.CMDID_PAIR ->{
                         val result = BLECMDUtil.parsePairCMD(parseResult.data)
                         val h = Handler()
-                        if (result){
-
-                            isPair = true
-                            mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
-                                    BLECMDUtil.createTimeCMD(), response)
-                            setStringValueToSP(CommonAction.SP_CLICKER_PAIRED_MAC, mCurrentMac!!)
-                            setStringValueToSP(CommonAction.SP_CLICKER_FLAGINFO, mFlagID!!)
-                            if (mClickerPlusListener != null) {
-                                h.post { mClickerPlusListener!!.onPair(ClickerPlusState.success) }
+                        when(result){
+                            BLECMDUtil.ConnectState.fail -> {
+                                isPair = false
+                                mBluetoothClien!!.disconnect(mCurrentMac)
+                                if (mClickerPlusListener != null) {
+                                    h.post { mClickerPlusListener!!.onPair(ClickerPlusState.fail) }
+                                }
                             }
-                        }else{
-                            isPair = false
-                            mBluetoothClien!!.disconnect(mCurrentMac)
-                            if (mClickerPlusListener != null) {
-                                h.post { mClickerPlusListener!!.onPair(ClickerPlusState.fail) }
+                            BLECMDUtil.ConnectState.success -> {
+                                isPair = true
+                                mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
+                                        BLECMDUtil.createTimeCMD(), response)
+                                setStringValueToSP(CommonAction.SP_CLICKER_PAIRED_MAC, mCurrentMac!!)
+                                setStringValueToSP(CommonAction.SP_CLICKER_FLAGINFO, mFlagID!!)
+                                if (mClickerPlusListener != null) {
+                                    h.post { mClickerPlusListener!!.onPair(ClickerPlusState.success) }
+                                }
+                            }
+                            BLECMDUtil.ConnectState.request -> {
+                                mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID, BLECMDUtil.createPariCMD(mFlagID!!), response)
                             }
                         }
                     }
@@ -406,16 +415,24 @@ object ClickerPlus {
                     BLECMDUtil.CMDID_CONNECTBACK ->{
                         val result = BLECMDUtil.parseConnectbackCMD(parseResult.data)
                         val h = Handler()
-                        if (result){
-                            isPair = true
-                            if (mClickerPlusListener != null) {
-                                h.post { mClickerPlusListener!!.onConnectBack(ClickerPlusState.success) }
+                        when(result){
+                            BLECMDUtil.ConnectState.fail -> {
+                                isPair = false
+                                mBluetoothClien!!.disconnect(mCurrentMac)
+                                if (mClickerPlusListener != null) {
+                                    h.post { mClickerPlusListener!!.onConnectBack(ClickerPlusState.fail) }
+                                }
                             }
-                        }else{
-                            isPair = false
-                            mBluetoothClien!!.disconnect(mCurrentMac)
-                            if (mClickerPlusListener != null) {
-                                h.post { mClickerPlusListener!!.onConnectBack(ClickerPlusState.fail) }
+                            BLECMDUtil.ConnectState.success -> {
+                                isPair = true
+                                mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
+                                        BLECMDUtil.createTimeCMD(), response)
+                                if (mClickerPlusListener != null) {
+                                    h.post { mClickerPlusListener!!.onConnectBack(ClickerPlusState.success) }
+                                }
+                            }
+                            BLECMDUtil.ConnectState.request -> {
+                                mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID, BLECMDUtil.createConnectBackCMD(mFlagID!!), response)
                             }
                         }
                     }
@@ -500,6 +517,12 @@ object ClickerPlus {
                         val result = BLECMDUtil.parseTimeBackCMD(parseResult.data)
                         if (result){
                             // 时间配置正确
+                        }
+                    }
+                    BLECMDUtil.CMDID_FINDPHONE -> {
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onFindPhone() }
                         }
                     }
 

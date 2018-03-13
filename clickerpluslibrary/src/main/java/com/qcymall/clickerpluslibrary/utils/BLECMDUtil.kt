@@ -9,6 +9,12 @@ import kotlin.experimental.and
  */
 object BLECMDUtil {
 
+    enum class ConnectState{
+        fail,
+        success,
+        request
+    }
+
     private val VERIFY_CODE1 = 0xFE.toByte() // 指令头（验证码1）
     private val VERIFY_CODE2 = 0xCF.toByte() // 指令头（验证码2）
 
@@ -19,6 +25,7 @@ object BLECMDUtil {
     val CMDID_BATTERY = 0x5011      // 获取电池电量
     val CMDID_OTA = 0x5012      // OTA升级
     val CMDID_TIME = 0x5013     // 时间同步
+    val CMDID_FINDPHONE = 0x5014    // 寻找手机
 
     val CMDID_WEAKUP = 0x5004       // 唤醒
     val CMDID_CLICK = 0x5005        // 单击
@@ -69,7 +76,7 @@ object BLECMDUtil {
         packData[9] = (cmdIndex and 0xff).toByte()
         packData[10] = 0x00.toByte()
         packData[11] = 0x00.toByte()
-        System.arraycopy(data, 0, packData, 12, datatemp.size)
+        System.arraycopy(datatemp, 0, packData, 12, datatemp.size)
         cmdIndex += 1
         return packData
     }
@@ -199,11 +206,17 @@ object BLECMDUtil {
         return packageCMD(CMDID_TIME, rtc_data);
     }
 
-    fun parsePairCMD(data: ByteArray?): Boolean{
+    fun parsePairCMD(data: ByteArray?): ConnectState{
         if (data != null && data.isNotEmpty()){
-            return data[0] == 1.toByte()
+            if (data[0] == 0.toByte()){
+                return ConnectState.fail
+            }else if (data[0] == 1.toByte()){
+                return ConnectState.success
+            }else if (data[0] == 2.toByte()){
+                return ConnectState.request
+            }
         }
-        return false
+        return ConnectState.fail
     }
     fun parseUnpairCMD(data: ByteArray?): Boolean{
         if (data != null && data.isNotEmpty()){
@@ -212,11 +225,17 @@ object BLECMDUtil {
         return false
     }
 
-    fun parseConnectbackCMD(data: ByteArray?): Boolean{
+    fun parseConnectbackCMD(data: ByteArray?): ConnectState{
         if (data != null && data.isNotEmpty()){
-            return data[0] == 1.toByte()
+            if (data[0] == 0.toByte()){
+                return ConnectState.fail
+            }else if (data[0] == 1.toByte()){
+                return ConnectState.success
+            }else if (data[0] == 2.toByte()){
+                return ConnectState.request
+            }
         }
-        return false
+        return ConnectState.fail
     }
     fun parseTimeBackCMD(data: ByteArray?): Boolean{
         if (data != null && data.isNotEmpty()){

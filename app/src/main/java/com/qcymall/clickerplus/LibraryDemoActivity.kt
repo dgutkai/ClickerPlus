@@ -1,15 +1,22 @@
 package com.qcymall.clickerplus
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioTrack
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.utils.ByteUtils
 import com.qcymall.clickerpluslibrary.ClickerPlus
 import com.qcymall.clickerpluslibrary.ClickerPlusListener
+import kotlinx.android.synthetic.main.activity_librarydemo.*
 import java.util.HashMap
 
 /**
@@ -20,6 +27,9 @@ class LibraryDemoActivity: AppCompatActivity()  {
     private val TAG = "LibraryDemoActivity"
     private var mDeviceMAC: String? = null
     private var mDevice: BluetoothDevice? = null
+    private var audioBufSize: Int = 0
+    private var player: AudioTrack? = null // 播放PCM数据的播放器
+    private lateinit var infoText: TextView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_librarydemo)
@@ -28,8 +38,18 @@ class LibraryDemoActivity: AppCompatActivity()  {
         mDevice = mapData["btdevice"] as BluetoothDevice
         Log.e(TAG, mapData["name"] as String?)
         ClickerPlus.mClickerPlusListener = mListener
+        audioBufSize = 244 * 4
+        player = AudioTrack(AudioManager.STREAM_MUSIC, 8000,
+                AudioFormat.CHANNEL_OUT_STEREO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                audioBufSize,
+                AudioTrack.MODE_STREAM)
+        infoText = findViewById(R.id.info_txt)
     }
 
+    fun clean(v: View){
+        infoText.setText("")
+    }
     fun pairClick(v: View){
         val result = ClickerPlus.pairDevice(mDeviceMAC!!, "123456")
         if (!result){
@@ -55,6 +75,14 @@ class LibraryDemoActivity: AppCompatActivity()  {
     }
 
     val mListener = object: ClickerPlusListener {
+        override fun onFindPhone() {
+            Toast.makeText(this@LibraryDemoActivity, "查找手机，手机进行震动响铃", Toast.LENGTH_SHORT).show()
+        }
+
+        @SuppressLint("SetTextI18n")
+        override fun onDataReceive(info: String) {
+            infoText.setText(info + infoText.text.toString())
+        }
 
         override fun onConnect(deviceMac: String) {
             Log.e(TAG, deviceMac + " OnConnect")
@@ -136,14 +164,17 @@ class LibraryDemoActivity: AppCompatActivity()  {
         override fun onVoicePCMStart() {
             Log.e(TAG, "onVoicePCMStart")
             Toast.makeText(this@LibraryDemoActivity, "PCM数据开始", Toast.LENGTH_SHORT).show()
+            player!!.play()
         }
 
         override fun onVoicePCMEnd() {
             Log.e(TAG, "onVoicePCMEnd")
             Toast.makeText(this@LibraryDemoActivity, "PCM数据结束", Toast.LENGTH_SHORT).show()
+            player!!.stop()
         }
         override fun onVoicePCM(data: ByteArray, index: Int) {
             Log.e(TAG, String.format("onVoicePCM  current Index = %d, Voice PCM Data: %s", index, ByteUtils.byteToString(data)))
+            player!!.write(data, 0, data.size)
         }
 
         override fun onIdeaPCMStart(header: String) {

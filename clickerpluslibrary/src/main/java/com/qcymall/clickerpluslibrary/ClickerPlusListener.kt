@@ -8,6 +8,8 @@ import com.inuker.bluetooth.library.search.SearchResult
  */
 interface ClickerPlusListener {
 
+    fun onDataReceive(info: String)
+
     fun onConnect(deviceMac: String)
     fun onDisconnect(deviceMac: String)
     fun onPair(state: ClickerPlus.ClickerPlusState)
@@ -25,6 +27,7 @@ interface ClickerPlusListener {
     fun onIdeaPCM(data: ByteArray, index: Int)
     fun onIdeaPCMEnd(info: ByteArray?)
     fun onBatteryChange(percent: Int)
+    fun onFindPhone()
 
     fun onOTAStart(deviceMac: String)
     fun onOTAProgressChanged(deviceMac: String, percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int)

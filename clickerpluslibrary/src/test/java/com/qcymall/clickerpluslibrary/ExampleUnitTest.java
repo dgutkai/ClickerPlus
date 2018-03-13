@@ -82,14 +82,22 @@ public class ExampleUnitTest {
     @Test
     public void createFind_isCorrect() throws Exception{
         byte[] result = BLECMDUtil.INSTANCE.createFindCMD();
-        byte[] assertBytes2 = {(byte) 0xfe, (byte) 0xcf, 0x00, 0x01, 0x00, 0x0c, 0x50, 0x04, result[8], result[9], 0x00, 0x00};
+        byte[] assertBytes2 = {(byte) 0xfe, (byte) 0xcf, 0x00, 0x01, 0x00, 0x0c, 0x50, 0x10, result[8], result[9], 0x00, 0x00};
         assertArrayEquals(result, assertBytes2);
 
     }
     @Test
     public void createBattery_isCorrect() throws Exception{
         byte[] result = BLECMDUtil.INSTANCE.createBatteryCMD();
-        byte[] assertBytes2 = {(byte) 0xfe, (byte) 0xcf, 0x00, 0x01, 0x00, 0x0c, 0x50, 0x10, result[8], result[9], 0x00, 0x00};
+        byte[] assertBytes2 = {(byte) 0xfe, (byte) 0xcf, 0x00, 0x01, 0x00, 0x0c, 0x50, 0x11, result[8], result[9], 0x00, 0x00};
+        assertArrayEquals(result, assertBytes2);
+
+    }
+
+    @Test
+    public void createOTA_isCorrect() throws Exception{
+        byte[] result = BLECMDUtil.INSTANCE.createOTACMD();
+        byte[] assertBytes2 = {(byte) 0xfe, (byte) 0xcf, 0x00, 0x01, 0x00, 0x0c, 0x50, 0x12, result[8], result[9], 0x00, 0x00};
         assertArrayEquals(result, assertBytes2);
 
     }
