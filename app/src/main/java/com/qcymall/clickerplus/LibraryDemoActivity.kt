@@ -86,14 +86,17 @@ class LibraryDemoActivity: AppCompatActivity()  {
 
         override fun onConnect(deviceMac: String) {
             Log.e(TAG, deviceMac + " OnConnect")
+            title = "已连接"
         }
 
         override fun onDisconnect(deviceMac: String) {
             Log.e(TAG, deviceMac + " onDisconnect")
+            title = "连接断开了"
         }
 
         override fun onPair(state: ClickerPlus.ClickerPlusState) {
             Log.e(TAG, "onPair " + state.name)
+            title = "已配对"
             when(state){
                 ClickerPlus.ClickerPlusState.success ->{
                     Toast.makeText(this@LibraryDemoActivity, "配对成功", Toast.LENGTH_SHORT).show()
@@ -124,7 +127,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
 
         override fun onConnectBack(state: ClickerPlus.ClickerPlusState) {
             Log.e(TAG, "onConnectBack " + state.name)
-
+            title = "已回连"
             when(state){
                 ClickerPlus.ClickerPlusState.success ->{
                     Toast.makeText(this@LibraryDemoActivity, "回连成功", Toast.LENGTH_SHORT).show()

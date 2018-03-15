@@ -152,6 +152,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     val mListener = object: ClickerPlusListener {
+        override fun onFindPhone() {
+            Log.e(TAG, "寻找手机中 ")
+        }
+
         @SuppressLint("SetTextI18n")
         override fun onDataReceive(info: String) {
         }
