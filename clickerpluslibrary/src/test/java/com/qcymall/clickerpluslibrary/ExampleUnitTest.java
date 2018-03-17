@@ -101,4 +101,11 @@ public class ExampleUnitTest {
         assertArrayEquals(result, assertBytes2);
 
     }
+
+    @Test
+    public void test_isCorrect() throws Exception{
+        int result = BLECMDUtil.INSTANCE.getInt(new byte[]{0x00, (byte) 0xf4});
+        assertEquals(result, 244);
+
+    }
 }

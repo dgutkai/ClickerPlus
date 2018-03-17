@@ -17,12 +17,20 @@ import com.inuker.bluetooth.library.utils.ByteUtils
 import com.qcymall.clickerpluslibrary.ClickerPlus
 import com.qcymall.clickerpluslibrary.ClickerPlusListener
 import kotlinx.android.synthetic.main.activity_librarydemo.*
-import java.util.HashMap
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Created by lanmi on 2018/2/27.
  */
 class LibraryDemoActivity: AppCompatActivity()  {
+
+//    var outputStream: FileOutputStream? = null
+    // 创建BufferedOutputStream对象
+//    var bufferedOutputStream: BufferedOutputStream? = null
 
     private val TAG = "LibraryDemoActivity"
     private var mDeviceMAC: String? = null
@@ -30,6 +38,9 @@ class LibraryDemoActivity: AppCompatActivity()  {
     private var audioBufSize: Int = 0
     private var player: AudioTrack? = null // 播放PCM数据的播放器
     private lateinit var infoText: TextView
+
+//    private var byteArray: ByteArray = ByteArray(230 * 4 * 100)
+    private var buffList: ArrayList<ByteArray> = ArrayList<ByteArray>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_librarydemo)
@@ -38,7 +49,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
         mDevice = mapData["btdevice"] as BluetoothDevice
         Log.e(TAG, mapData["name"] as String?)
         ClickerPlus.mClickerPlusListener = mListener
-        audioBufSize = 244 * 4
+        audioBufSize = 230 * 16
         player = AudioTrack(AudioManager.STREAM_MUSIC, 8000,
                 AudioFormat.CHANNEL_OUT_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT,
@@ -68,12 +79,50 @@ class LibraryDemoActivity: AppCompatActivity()  {
     }
 
     fun ota4Click(v: View){
+//        val speakpath = "/sdcard/DCS/PCM/";
+//        val file2 = File(speakpath, "abc2.pcm");
+//
+//        // 如果文件存在则删除
+//        if (file2.exists()) {
+//            file2.delete();
+//        }
+//        // 在文件系统中根据路径创建一个新的空文件
+//        try {
+//            file2.createNewFile();
+//            // 获取FileOutputStream对象
+//            outputStream = FileOutputStream(file2);
+//            // 获取BufferedOutputStream对象
+//            bufferedOutputStream = BufferedOutputStream(outputStream);
+//        } catch (e: Exception) {
+//            e.printStackTrace();
+//        }
         ClickerPlus.otaDFU(this, "/storage/emulated/0/360Download/sdk13_app_4(1).zip")
     }
     fun ota5Click(v: View){
         ClickerPlus.otaDFU(this, "/storage/emulated/0/360Download/sdk13_app_5(1).zip")
     }
 
+
+    override fun onBackPressed() {
+//        super.onBackPressed()
+        // 关闭创建的流对象
+//        if (outputStream != null) {
+//            try {
+//                outputStream!!.close();
+//            } catch (e: Exception) {
+//                e.printStackTrace();
+//            }
+//
+//        }
+//        if (bufferedOutputStream != null) {
+//            try {
+//                bufferedOutputStream!!.close();
+//            } catch (e2: Exception) {
+//                e2.printStackTrace();
+//            }
+//
+//        }
+    }
     val mListener = object: ClickerPlusListener {
         override fun onFindPhone() {
             Toast.makeText(this@LibraryDemoActivity, "查找手机，手机进行震动响铃", Toast.LENGTH_SHORT).show()
@@ -168,6 +217,22 @@ class LibraryDemoActivity: AppCompatActivity()  {
             Log.e(TAG, "onVoicePCMStart")
             Toast.makeText(this@LibraryDemoActivity, "PCM数据开始", Toast.LENGTH_SHORT).show()
             player!!.play()
+            Thread({
+                while (player!!.playState == AudioTrack.PLAYSTATE_PLAYING){
+                    val bytes = ByteArray(audioBufSize)
+                    Arrays.fill(bytes, 0)
+                    synchronized(this@LibraryDemoActivity, {
+                        if (buffList.size > 4){
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 0, audioBufSize/4)
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 230*4, audioBufSize/4)
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 230*8, audioBufSize/4)
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 230*12, audioBufSize/4)
+                        }
+                    })
+                    player!!.write(bytes, 0, audioBufSize)
+                    Thread.sleep(10)
+                }
+            }).start()
         }
 
         override fun onVoicePCMEnd() {
@@ -177,7 +242,18 @@ class LibraryDemoActivity: AppCompatActivity()  {
         }
         override fun onVoicePCM(data: ByteArray, index: Int) {
             Log.e(TAG, String.format("onVoicePCM  current Index = %d, Voice PCM Data: %s", index, ByteUtils.byteToString(data)))
-            player!!.write(data, 0, data.size)
+//                try {
+//                    // 往文件所在的缓冲输出流中写byte数据
+//                    bufferedOutputStream!!.write(data);
+//                    bufferedOutputStream!!.flush();
+//
+//                }catch (e: Exception){
+//
+//                }
+            synchronized(this@LibraryDemoActivity, {
+                buffList.add(data);
+            })
+
         }
 
         override fun onIdeaPCMStart(header: String) {

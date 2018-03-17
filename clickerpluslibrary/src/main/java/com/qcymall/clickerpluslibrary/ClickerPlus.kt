@@ -362,13 +362,15 @@ object ClickerPlus {
     private val mNotifyRsp = object : BleNotifyResponse {
         override fun onNotify(service: UUID, character: UUID, value: ByteArray) {
             if (service == SERVICE_UUID && character == NOTIFICATION_UUID) {
-                Log.e(TAG, String.format("Notify: %s \n%d", ByteUtils.byteToString(value), Date().time))
+
                 if (mClickerPlusListener != null){
                     val h = Handler()
-                    h.post { mClickerPlusListener!!.onDataReceive(String.format("Notify: %s -> %d\n", ByteUtils.byteToString(value), Date().time)) }
+//                    h.post { mClickerPlusListener!!.onDataReceive(String.format("Notify: %s -> %d\n", ByteUtils.byteToString(value), Date().time)) }
                 }
                 val parseResult = BLECMDUtil.parseCMD(value) ?: return
+//                Log.e(TAG, String.format("Notify: %s %d \n%d", ByteUtils.byteToString(parseResult.data), parseResult.id, Date().time))
                 when (parseResult.id){
+
                     BLECMDUtil.CMDID_PAIR ->{
                         val result = BLECMDUtil.parsePairCMD(parseResult.data)
                         val h = Handler()

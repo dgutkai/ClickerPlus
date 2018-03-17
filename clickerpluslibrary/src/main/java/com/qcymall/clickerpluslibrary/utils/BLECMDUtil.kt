@@ -113,7 +113,7 @@ object BLECMDUtil {
         var result = 0
         if (d != null) {
             for (b in d) {
-                result = (result shl 8) + (b and 0xff.toByte())
+                result = (result shl 8) + (b.toInt() and 0xff)
             }
         }
         return result
