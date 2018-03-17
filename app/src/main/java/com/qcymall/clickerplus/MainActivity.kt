@@ -48,6 +48,11 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 2)
 
         }
+        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
+
+        }
 
         mBluetoothClien = BluetoothClient(this)
 
