@@ -13,6 +13,7 @@ import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener
 import com.inuker.bluetooth.library.connect.options.BleConnectOptions
 import com.inuker.bluetooth.library.connect.response.BleConnectResponse
 import com.inuker.bluetooth.library.connect.response.BleNotifyResponse
+import com.inuker.bluetooth.library.connect.response.BleReadRssiResponse
 import com.inuker.bluetooth.library.connect.response.BleWriteResponse
 import com.inuker.bluetooth.library.search.SearchRequest
 import com.inuker.bluetooth.library.search.SearchResult
@@ -24,6 +25,9 @@ import com.qcymall.clickerpluslibrary.utils.BLECMDUtil
 import no.nordicsemi.android.dfu.DfuProgressListenerAdapter
 import no.nordicsemi.android.dfu.DfuServiceInitiator
 import no.nordicsemi.android.dfu.DfuServiceListenerHelper
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -57,13 +61,40 @@ object ClickerPlus {
 //    private var mCurrentDevice: BluetoothDevice? = null
 //    private var mWriteCharacteristic:BleGattCharacter? = null
 //    private var mNotificationCharacteristic: BleGattCharacter? = null
+
+
+
+//    var outputStream: FileOutputStream? = null
+//    // 创建BufferedOutputStream对象
+//    var bufferedOutputStream: BufferedOutputStream? = null
+//
+//    var outputStream2: FileOutputStream? = null
+//    // 创建BufferedOutputStream对象
+//    var bufferedOutputStream2: BufferedOutputStream? = null
+
+
+    /**
+     * 初始化库，该方法必须在最开始调用，只有调用了初始化方法之后，其他方法放可以调用。
+     * @param context
+     */
     fun initClicker(context: Context) {
         mBluetoothClien = BluetoothClient(context)
         mContext = WeakReference(context)
         connectDevice()
 
     }
+    fun readRss(response: BleReadRssiResponse){
+        if (mCurrentMac != null) {
+            return mBluetoothClien!!.readRssi(mCurrentMac, response)
+        }
+    }
 
+    // TODO: 发布的时候删掉
+    fun disconnect(){
+        Log.e(TAG, "disconnect()")
+        mBluetoothClien!!.disconnect(mCurrentMac);
+        mCurrentMac = null;
+    }
     fun scanDevice(searchResponse: SearchResponse){
         val request = SearchRequest.Builder()
                 .searchBluetoothLeDevice(3000, 3)   // 先扫BLE设备3次，每次3s
@@ -124,6 +155,13 @@ object ClickerPlus {
         })
         return true
     }
+
+    /**
+     * 配对设备，设备进入配对模式的前提下可以连接并配对设备。
+     * @param deviceMac 配对设备的MAC地址
+     * @param flagID 用户唯一的字符串，用于绑定设备时作唯一识别。
+     * @return 库没有初始化时返回false。
+     */
     fun pairDevice(deviceMac: String, flagID: String): Boolean{
         if (mBluetoothClien == null){
             return false
@@ -188,7 +226,18 @@ object ClickerPlus {
         return true
 
     }
+    fun micIncrease(value: Int): Boolean{
+        if (!isPair){
+            return false
+        }
+        if (!isConnect || mCurrentMac == null){
+            return false
+        }
+        mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
+                BLECMDUtil.createIncreaseCMD(value), response)
+        return true
 
+    }
     fun otaDFU(context: Context, filePath: String): Boolean{
         if (!isPair){
             return false
@@ -326,6 +375,7 @@ object ClickerPlus {
                 val timeoutHandler = Handler()
                 timeoutHandler.postDelayed({
                     if (!isPair && isConnect){
+                        Log.e(TAG, "timeoutHandler.postDelayed")
                         mBluetoothClien!!.disconnect(mCurrentMac)
                         if (mClickerPlusListener != null) {
                             if (isSendFlag) {
@@ -352,6 +402,22 @@ object ClickerPlus {
                         mCurrentMac = null
                     }
                 }
+//                if (outputStream != null) {
+//                    try {
+//                        outputStream!!.close();
+//                    } catch (e: Exception) {
+//                        e.printStackTrace();
+//                    }
+//
+//                }
+//                if (bufferedOutputStream != null) {
+//                    try {
+//                        bufferedOutputStream!!.close();
+//                    } catch (e2: Exception) {
+//                        e2.printStackTrace();
+//                    }
+//
+//                }
             }
         }
     }
@@ -377,6 +443,7 @@ object ClickerPlus {
                         when(result){
                             BLECMDUtil.ConnectState.fail -> {
                                 isPair = false
+                                Log.e(TAG, "BLECMDUtil.CMDID_PAIR BLECMDUtil.ConnectState.fail")
                                 mBluetoothClien!!.disconnect(mCurrentMac)
                                 if (mClickerPlusListener != null) {
                                     h.post { mClickerPlusListener!!.onPair(ClickerPlusState.fail) }
@@ -404,6 +471,7 @@ object ClickerPlus {
                             isPair = false
                             setStringValueToSP(CommonAction.SP_CLICKER_PAIRED_MAC, "")
                             setStringValueToSP(CommonAction.SP_CLICKER_FLAGINFO, "")
+                            Log.e(TAG, "BLECMDUtil.CMDID_UNPAIR")
                             mBluetoothClien!!.disconnect(mCurrentMac)
                             if (mClickerPlusListener != null) {
                                 h.post { mClickerPlusListener!!.onCancelPair(ClickerPlusState.success) }
@@ -420,6 +488,7 @@ object ClickerPlus {
                         when(result){
                             BLECMDUtil.ConnectState.fail -> {
                                 isPair = false
+                                Log.e(TAG, "BLECMDUtil.CMDID_CONNECTBACK BLECMDUtil.ConnectState.fail")
                                 mBluetoothClien!!.disconnect(mCurrentMac)
                                 if (mClickerPlusListener != null) {
                                     h.post { mClickerPlusListener!!.onConnectBack(ClickerPlusState.fail) }
@@ -473,6 +542,23 @@ object ClickerPlus {
                             val h = Handler()
                             h.post { mClickerPlusListener!!.onVoicePCMStart() }
                         }
+//                        val speakpath = "/sdcard/DCS/PCM/";
+//                        val file2 = File(speakpath, "abc1.pcm");
+//
+//                        // 如果文件存在则删除
+//                        if (file2.exists()) {
+//                            file2.delete();
+//                        }
+//                        // 在文件系统中根据路径创建一个新的空文件
+//                        try {
+//                            file2.createNewFile();
+//                            // 获取FileOutputStream对象
+//                            outputStream = FileOutputStream(file2);
+//                            // 获取BufferedOutputStream对象
+//                            bufferedOutputStream = BufferedOutputStream(outputStream);
+//                        } catch (e: Exception) {
+//                            e.printStackTrace();
+//                        }
                     }
                     BLECMDUtil.CMDID_VOICEPCM -> {
                         val result = BLECMDUtil.parsePCMData(parseResult.data)
@@ -480,12 +566,23 @@ object ClickerPlus {
                             val h = Handler()
                             h.post { mClickerPlusListener!!.onVoicePCM(result["pcmData"] as ByteArray, result["index"] as Int) }
                         }
+//                        val pcmData = ByteArray(parseResult.data!!.size - 2)
+//                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
+//                        try {
+//                            // 往文件所在的缓冲输出流中写byte数据
+//                            bufferedOutputStream!!.write(pcmData);
+//                            bufferedOutputStream!!.flush();
+//
+//                        }catch (e: Exception){
+//
+//                        }
                     }
                     BLECMDUtil.CMDID_VOICEEND -> {
                         if (mClickerPlusListener != null) {
                             val h = Handler()
                             h.post { mClickerPlusListener!!.onVoicePCMEnd() }
                         }
+
                     }
                     BLECMDUtil.CMDID_IDEASTART -> {
                         val result = BLECMDUtil.parseIdeaHeader(parseResult.data)
@@ -508,6 +605,75 @@ object ClickerPlus {
                             h.post { mClickerPlusListener!!.onIdeaPCMEnd(parseResult.data) }
                         }
                     }
+                    BLECMDUtil.CMDID_VOICE_TMP_START -> {
+                        val result = BLECMDUtil.parseVoiceTmpHeader(parseResult.data)
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onVoiceTmpPCMStart(result) }
+                        }
+
+//                        val speakpath = "/sdcard/DCS/PCM/";
+//                        val file2 = File(speakpath, "abc2.pcm");
+//
+//                        // 如果文件存在则删除
+//                        if (file2.exists()) {
+//                            file2.delete();
+//                        }
+//                        // 在文件系统中根据路径创建一个新的空文件
+//                        try {
+//                            file2.createNewFile();
+//                            // 获取FileOutputStream对象
+//                            outputStream2 = FileOutputStream(file2);
+//                            // 获取BufferedOutputStream对象
+//                            bufferedOutputStream2 = BufferedOutputStream(outputStream2);
+//                        } catch (e: Exception) {
+//                            e.printStackTrace();
+//                        }
+
+                    }
+                    BLECMDUtil.CMDID_VOICE_TMP_PCM -> {
+                        val result = BLECMDUtil.parsePCMData(parseResult.data)
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onVoiceTmpPCM(result["pcmData"] as ByteArray, result["index"] as Int) }
+                        }
+
+//                        val pcmData = ByteArray(parseResult.data!!.size - 2)
+//                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
+//                        try {
+//                            // 往文件所在的缓冲输出流中写byte数据
+//                            bufferedOutputStream2!!.write(pcmData);
+//                            bufferedOutputStream2!!.flush();
+//
+//                        }catch (e: Exception){
+//
+//                        }
+                    }
+                    BLECMDUtil.CMDID_VOICE_TMP_END -> {
+
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post { mClickerPlusListener!!.onVoiceTmpPCMEnd(parseResult.data) }
+                        }
+//                        if (outputStream2 != null) {
+//                            try {
+//                                outputStream2!!.close()
+//                            } catch (e: Exception) {
+//                                e.printStackTrace();
+//                            }
+//
+//                        }
+//                        if (bufferedOutputStream2 != null) {
+//                            try {
+//                                bufferedOutputStream2!!.close();
+//                            } catch (e2: Exception) {
+//                                e2.printStackTrace();
+//                            }
+//
+//                        }
+
+                    }
+
                     BLECMDUtil.CMDID_BATTERY -> {
                         val result = BLECMDUtil.parseBatteryCMD(parseResult.data)
                         if (mClickerPlusListener != null) {

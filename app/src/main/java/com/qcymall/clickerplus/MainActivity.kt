@@ -157,6 +157,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     val mListener = object: ClickerPlusListener {
+        // 语音指令缓存上传
+        override fun onVoiceTmpPCMStart(header: String) {
+
+            Log.e(TAG, "onVoiceTmpPCMStart " + header)
+        }
+
+        override fun onVoiceTmpPCM(data: ByteArray, index: Int) {
+            Log.e(TAG, "onVoiceTmpPCM " + index)
+        }
+
+        override fun onVoiceTmpPCMEnd(info: ByteArray?) {
+            Log.e(TAG, "onVoiceTmpPCMEnd ")
+        }
+
         override fun onFindPhone() {
             Log.e(TAG, "寻找手机中 ")
         }

@@ -26,6 +26,9 @@ interface ClickerPlusListener {
     fun onIdeaPCMStart(header: String)
     fun onIdeaPCM(data: ByteArray, index: Int)
     fun onIdeaPCMEnd(info: ByteArray?)
+    fun onVoiceTmpPCMStart(header: String)
+    fun onVoiceTmpPCM(data: ByteArray, index: Int)
+    fun onVoiceTmpPCMEnd(info: ByteArray?)
     fun onBatteryChange(percent: Int)
     fun onFindPhone()
 

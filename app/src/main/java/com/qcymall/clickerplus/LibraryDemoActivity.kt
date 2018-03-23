@@ -2,16 +2,20 @@ package com.qcymall.clickerplus
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
+import android.content.DialogInterface
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Bundle
+import android.os.Handler
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.inuker.bluetooth.library.connect.response.BleReadRssiResponse
 import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.utils.ByteUtils
 import com.qcymall.clickerpluslibrary.ClickerPlus
@@ -102,10 +106,39 @@ class LibraryDemoActivity: AppCompatActivity()  {
         ClickerPlus.otaDFU(this, "/storage/emulated/0/360Download/sdk13_app_5(1).zip")
     }
 
+    fun minincreaseClick(v: View){
+        val editText = EditText(this);
+        val dialog = AlertDialog.Builder(this).setTitle("输入值").setView(editText)
+                .setPositiveButton("确定", object :DialogInterface.OnClickListener{
+                    override fun onClick(p0: DialogInterface?, p1: Int) {
+                        ClickerPlus.micIncrease(editText.text.toString().toInt())
+                    }
 
+                }).setNegativeButton("取消", null).create()
+        dialog.show()
+    }
+    fun readRssiClick(v: View){
+        ClickerPlus.readRss(object : BleReadRssiResponse{
+            override fun onResponse(code: Int, data: Int?) {
+                if (data != null) {
+                    val h = Handler()
+                    h.post {
+                        Toast.makeText(this@LibraryDemoActivity, "RSSI = " + data, Toast.LENGTH_SHORT).show()
+                    }
+
+
+                }
+            }
+
+        })
+    }
+
+    fun disconnect(v: View){
+        ClickerPlus.disconnect()
+    }
     override fun onBackPressed() {
 //        super.onBackPressed()
-        // 关闭创建的流对象
+//         关闭创建的流对象
 //        if (outputStream != null) {
 //            try {
 //                outputStream!!.close();
@@ -124,6 +157,84 @@ class LibraryDemoActivity: AppCompatActivity()  {
 //        }
     }
     val mListener = object: ClickerPlusListener {
+        // 语音指令缓存上传
+        override fun onVoiceTmpPCMStart(header: String) {
+
+            Log.e(TAG, "onVoiceTmpPCMStart " + header)
+
+//            val speakpath = "/sdcard/DCS/PCM/";
+//            val file2 = File(speakpath, "abc2.pcm");
+//
+//            // 如果文件存在则删除
+//            if (file2.exists()) {
+//                file2.delete();
+//            }
+//            // 在文件系统中根据路径创建一个新的空文件
+//            try {
+//                file2.createNewFile();
+//                // 获取FileOutputStream对象
+//                outputStream = FileOutputStream(file2);
+//                // 获取BufferedOutputStream对象
+//                bufferedOutputStream = BufferedOutputStream(outputStream);
+//            } catch (e: Exception) {
+//                e.printStackTrace();
+//            }
+
+            player!!.play()
+            Thread({
+                while (player!!.playState == AudioTrack.PLAYSTATE_PLAYING){
+                    val bytes = ByteArray(audioBufSize)
+                    Arrays.fill(bytes, 0)
+                    synchronized(this@LibraryDemoActivity, {
+                        if (buffList.size > 4){
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 0, audioBufSize/4)
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 230*4, audioBufSize/4)
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 230*8, audioBufSize/4)
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 230*12, audioBufSize/4)
+                        }
+                    })
+                    player!!.write(bytes, 0, audioBufSize)
+                    Thread.sleep(10)
+                }
+            }).start()
+        }
+
+        override fun onVoiceTmpPCM(data: ByteArray, index: Int) {
+            Log.e(TAG, "onVoiceTmpPCM " + index)
+            synchronized(this@LibraryDemoActivity, {
+                buffList.add(data);
+            })
+//            try {
+//                    // 往文件所在的缓冲输出流中写byte数据
+//                    bufferedOutputStream!!.write(data);
+//                    bufferedOutputStream!!.flush();
+//
+//                }catch (e: Exception){
+//
+//                }
+        }
+
+        override fun onVoiceTmpPCMEnd(info: ByteArray?) {
+            Log.e(TAG, "onVoiceTmpPCMEnd ")
+            player!!.stop()
+//        if (outputStream != null) {
+//            try {
+//                outputStream!!.close();
+//            } catch (e: Exception) {
+//                e.printStackTrace();
+//            }
+//
+//        }
+//        if (bufferedOutputStream != null) {
+//            try {
+//                bufferedOutputStream!!.close();
+//            } catch (e2: Exception) {
+//                e2.printStackTrace();
+//            }
+//
+//        }
+        }
+
         override fun onFindPhone() {
             Toast.makeText(this@LibraryDemoActivity, "查找手机，手机进行震动响铃", Toast.LENGTH_SHORT).show()
         }
@@ -214,6 +325,24 @@ class LibraryDemoActivity: AppCompatActivity()  {
             Toast.makeText(this@LibraryDemoActivity, "闪念胶囊", Toast.LENGTH_SHORT).show()
         }
         override fun onVoicePCMStart() {
+//            val speakpath = "/sdcard/DCS/PCM/";
+//            val file2 = File(speakpath, "abc1.pcm");
+//
+//            // 如果文件存在则删除
+//            if (file2.exists()) {
+//                file2.delete();
+//            }
+//            // 在文件系统中根据路径创建一个新的空文件
+//            try {
+//                file2.createNewFile();
+//                // 获取FileOutputStream对象
+//                outputStream = FileOutputStream(file2);
+//                // 获取BufferedOutputStream对象
+//                bufferedOutputStream = BufferedOutputStream(outputStream);
+//            } catch (e: Exception) {
+//                e.printStackTrace();
+//            }
+
             Log.e(TAG, "onVoicePCMStart")
             Toast.makeText(this@LibraryDemoActivity, "PCM数据开始", Toast.LENGTH_SHORT).show()
             player!!.play()
@@ -259,14 +388,35 @@ class LibraryDemoActivity: AppCompatActivity()  {
         override fun onIdeaPCMStart(header: String) {
             Log.e(TAG, "onIdeaPCMStart " + header)
             Toast.makeText(this@LibraryDemoActivity, "闪念胶囊PCM数据开始", Toast.LENGTH_SHORT).show()
+            player!!.play()
+            Thread({
+                while (player!!.playState == AudioTrack.PLAYSTATE_PLAYING){
+                    val bytes = ByteArray(audioBufSize)
+                    Arrays.fill(bytes, 0)
+                    synchronized(this@LibraryDemoActivity, {
+                        if (buffList.size > 4){
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 0, audioBufSize/4)
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 230*4, audioBufSize/4)
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 230*8, audioBufSize/4)
+                            System.arraycopy(buffList.removeAt(0), 0, bytes, 230*12, audioBufSize/4)
+                        }
+                    })
+                    player!!.write(bytes, 0, audioBufSize)
+                    Thread.sleep(10)
+                }
+            }).start()
         }
 
         override fun onIdeaPCMEnd(info: ByteArray?) {
             Log.e(TAG, "onIdeaPCMEnd " + ByteUtils.byteToString(info))
             Toast.makeText(this@LibraryDemoActivity, "闪念胶囊PCM数据结束", Toast.LENGTH_SHORT).show()
+            player!!.stop()
         }
         override fun onIdeaPCM(data: ByteArray, index: Int) {
             Log.e(TAG, String.format("onIdeaPCM  current Index = %d, Voice PCM Data: %s", index, ByteUtils.byteToString(data)))
+            synchronized(this@LibraryDemoActivity, {
+                buffList.add(data);
+            })
         }
 
         override fun onBatteryChange(percent: Int) {

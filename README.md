@@ -21,19 +21,36 @@ clicker+按键长按时调用。
 clicker+发送唤醒指令后调用。
 #### 8、onIdeaCapsule()
 clicker+闪念胶囊时候调用。
-#### 9、onVoicePCM(data: ByteArray, isEnd: Boolean)
-语音录音的PCM数据回调，最后一帧PCM数据时，isEnd为true。
-#### 10、onIdeaPCM(data: ByteArray, isEnd: Boolean)
-闪念胶囊的PCM数据，一个文件的最后一帧时，isEnd为true。
-#### 11、onBatteryChange(percent: Int)
+#### 9、onVoicePCMStart()
+语音录音的PCM数据开始，表示后面将会收到连续的语音PCM数据。
+#### 10、onVoicePCM(data: ByteArray, index: Int)
+语音录音的PCM数据，以Index作为标号区分先后。
+#### 11、onVoicePCMEnd()
+语音录音PCM数据传输结束。
+#### 12、onIdeaPCMStart(header: String)
+闪念胶囊PCM数据开始传输。
+#### 13、onIdeaPCM(data: ByteArray, index: Int)
+闪念胶囊的PCM数据，Index表示数据标号，区分先后。
+#### 14、onIdeaPCMEnd(info: ByteArray?)
+闪念胶囊PCM数据结束传输。
+#### 15、onVoiceTmpPCMStart(header: String)
+缓存在设备中的语音录音PCM数据开始传输。该种情况出现在传输语音录音PCM数据的时候，BLE连接中断。
+#### 16、onVoiceTmpPCM(data: ByteArray, index: Int)
+缓存在设备中的语音录音PCM数据
+#### 17、onVoiceTmpPCMEnd(info: ByteArray?)
+缓存在设备中的语音录音PCM数据结束传输。
+#### 18、onBatteryChange(percent: Int)
 电池电量发生变化（clicker+发送电池电量指令）时调用，percent为当前电量的百分比。
+#### 19、onFindPhone()
+查找手机时调用，此时手机可以做震动响铃以提示用户。
+
 ## Library调用方法
 ### 1、初始化
-```java
+```kotlin
 initClicker(context: Context)
 ```
 一般在使用该库时首先运行该方法。可以创建一个继承Application的BaseApplication，在BaseApplication中调用初始化方法，像下面一样。
-```java
+```kotlin
 class BaseApplication: Application() {
     override fun onCreate() {
         super.onCreate()
@@ -44,7 +61,7 @@ class BaseApplication: Application() {
 ### 2、设置ClickerPlusListener
 在使用该库时，可以设置监听对象，用于响应Clicker+设备的状态变化。
 在需要的地方新建一个Listener对象，并赋予ClickerPlus。
-```java
+```kotlin
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,53 +71,163 @@ class MainActivity : AppCompatActivity() {
     }
     
     val mListener = object: ClickerPlusListener{
-        override fun onPair(state: ClickerPlus.ClickerPlusState) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
+        // 语音指令缓存上传
+                override fun onVoiceTmpPCMStart(header: String) {
+        
+                    Log.e(TAG, "onVoiceTmpPCMStart " + header)
+                }
+        
+                override fun onVoiceTmpPCM(data: ByteArray, index: Int) {
+                    Log.e(TAG, "onVoiceTmpPCM " + index)
+                }
+        
+                override fun onVoiceTmpPCMEnd(info: ByteArray?) {
+                    Log.e(TAG, "onVoiceTmpPCMEnd ")
+                }
+        
+                override fun onFindPhone() {
+                    Toast.makeText(this@LibraryDemoActivity, "查找手机，手机进行震动响铃", Toast.LENGTH_SHORT).show()
+                }
 
-        override fun onCancelPair(state: ClickerPlus.ClickerPlusState) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onConnectBack(state: ClickerPlus.ClickerPlusState) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onClick() {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onDoubleClick() {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onLongPress() {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onWeakup() {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onIdeaCapsule() {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onVoicePCM(data: ByteArray, isEnd: Boolean) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onIdeaPCM(data: ByteArray, isEnd: Boolean) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onBatteryChange(percent: Int) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-    }
+                override fun onConnect(deviceMac: String) {
+                    Log.e(TAG, deviceMac + " OnConnect")
+                    
+                }
+        
+                override fun onDisconnect(deviceMac: String) {
+                    Log.e(TAG, deviceMac + " onDisconnect")
+                    
+                }
+        
+                override fun onPair(state: ClickerPlus.ClickerPlusState) {
+                    Log.e(TAG, "onPair " + state.name)
+                    
+                    when(state){
+                        ClickerPlus.ClickerPlusState.success ->{
+                            Toast.makeText(this@LibraryDemoActivity, "配对成功", Toast.LENGTH_SHORT).show()
+                        }
+                        ClickerPlus.ClickerPlusState.pairing ->{
+                            Toast.makeText(this@LibraryDemoActivity, "正在配对，请按一下设备上的按键。", Toast.LENGTH_SHORT).show()
+                        }
+                        ClickerPlus.ClickerPlusState.fail -> {
+                            Toast.makeText(this@LibraryDemoActivity, "配对超时", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+        
+                }
+        
+                override fun onCancelPair(state: ClickerPlus.ClickerPlusState) {
+                    Log.e(TAG, "onCancelPair " + state.name)
+                    when(state){
+                        ClickerPlus.ClickerPlusState.success ->{
+                            Toast.makeText(this@LibraryDemoActivity, "取消配对成功", Toast.LENGTH_SHORT).show()
+                        }
+                        ClickerPlus.ClickerPlusState.fail -> {
+                            Toast.makeText(this@LibraryDemoActivity, "取消配对失败", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                        }
+                    }
+                }
+        
+                override fun onConnectBack(state: ClickerPlus.ClickerPlusState) {
+                    Log.e(TAG, "onConnectBack " + state.name)
+                    title = "已回连"
+                    when(state){
+                        ClickerPlus.ClickerPlusState.success ->{
+                            Toast.makeText(this@LibraryDemoActivity, "回连成功", Toast.LENGTH_SHORT).show()
+                        }
+                        ClickerPlus.ClickerPlusState.fail -> {
+                            Toast.makeText(this@LibraryDemoActivity, "回连失败", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                        }
+                    }
+                }
+        
+                override fun onClick() {
+                    Log.e(TAG, "onClick")
+                    Toast.makeText(this@LibraryDemoActivity, "单击", Toast.LENGTH_SHORT).show()
+                }
+        
+                override fun onDoubleClick() {
+                    Log.e(TAG, "onDoubleClick")
+                    Toast.makeText(this@LibraryDemoActivity, "双击", Toast.LENGTH_SHORT).show()
+                }
+        
+                override fun onLongPress() {
+                    Log.e(TAG, "onLongPress")
+                    Toast.makeText(this@LibraryDemoActivity, "长按", Toast.LENGTH_SHORT).show()
+                }
+        
+                override fun onWeakup() {
+                    Log.e(TAG, "onWeakup")
+                    Toast.makeText(this@LibraryDemoActivity, "音箱唤醒", Toast.LENGTH_SHORT).show()
+                }
+        
+                override fun onIdeaCapsule() {
+                    Log.e(TAG, "onIdeaCapsule")
+                    Toast.makeText(this@LibraryDemoActivity, "闪念胶囊", Toast.LENGTH_SHORT).show()
+                }
+                override fun onVoicePCMStart() {
+                    Log.e(TAG, "onVoicePCMStart")
+                    
+                }
+        
+                override fun onVoicePCMEnd() {
+                    Log.e(TAG, "onVoicePCMEnd")
+                    Toast.makeText(this@LibraryDemoActivity, "PCM数据结束", Toast.LENGTH_SHORT).show()
+                    
+                }
+                override fun onVoicePCM(data: ByteArray, index: Int) {
+                    Log.e(TAG, String.format("onVoicePCM  current Index = %d, Voice PCM Data: %s", index, ByteUtils.byteToString(data)))  
+                }
+        
+                override fun onIdeaPCMStart(header: String) {
+                    Log.e(TAG, "onIdeaPCMStart " + header)
+                    Toast.makeText(this@LibraryDemoActivity, "闪念胶囊PCM数据开始", Toast.LENGTH_SHORT).show()
+                }
+        
+                override fun onIdeaPCMEnd(info: ByteArray?) {
+                    Log.e(TAG, "onIdeaPCMEnd " + ByteUtils.byteToString(info))
+                    Toast.makeText(this@LibraryDemoActivity, "闪念胶囊PCM数据结束", Toast.LENGTH_SHORT).show()
+                }
+                override fun onIdeaPCM(data: ByteArray, index: Int) {
+                    Log.e(TAG, String.format("onIdeaPCM  current Index = %d, Voice PCM Data: %s", index, ByteUtils.byteToString(data)))
+                }
+        
+                override fun onBatteryChange(percent: Int) {
+                    Log.e(TAG, "onBatteryChange percent = " + percent)
+                }
+        
+                override fun onOTAStart(deviceMac: String) {
+                    Log.e(TAG, deviceMac + " onOTAStart")
+                }
+        
+                override fun onOTAProgressChanged(deviceMac: String, percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
+                    Log.e(TAG, "onProgressChanged " + deviceMac + " progress:" + percent + " speed:" + speed +
+                            " avgSpeed:" + avgSpeed + " currentPart:" + currentPart + " partsTotal:" + partsTotal)
+                }
+        
+                override fun onOTACompleted(deviceMac: String) {
+                    Log.e(TAG, deviceMac + " onOTACompleted")
+                }
+        
+                override fun onOTAError(deviceMac: String, error: Int, errorType: Int, message: String?) {
+                    Log.e(TAG, "onError " + deviceMac + " error:" + error + " errorType:" + errorType + " message:" + message)
+                }
+            }
 }
 ```
 ### 2、连接配对
+配对连接使用ClickerPlus.pairDevice(deviceMac: String, flagID: String)方法，其中传入需要连接配对设备的MAC地址以及用户唯一的字符串（不超过7个字符）。
+~~~kotlin
+fun pairClick(v: View){
+    val result = ClickerPlus.pairDevice(mDeviceMAC!!, "123456")
+    if (!result){
+        Toast.makeText(this, "当前已经连接设备，无需配对", Toast.LENGTH_SHORT).show()
+    }
+}
+~~~
 ### 3、设备回连
 ### 4、取消配对
