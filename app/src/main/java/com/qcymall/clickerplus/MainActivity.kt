@@ -175,9 +175,6 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "寻找手机中 ")
         }
 
-        @SuppressLint("SetTextI18n")
-        override fun onDataReceive(info: String) {
-        }
 
         override fun onConnect(deviceMac: String) {
             Log.e(TAG, deviceMac + " OnConnect")

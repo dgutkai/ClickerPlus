@@ -43,7 +43,28 @@ class LibraryDemoActivity: AppCompatActivity()  {
     private var player: AudioTrack? = null // 播放PCM数据的播放器
     private lateinit var infoText: TextView
 
-//    private var byteArray: ByteArray = ByteArray(230 * 4 * 100)
+    private val rssiThread: Thread = Thread({
+        while (true) {
+            Thread.sleep(1000)
+            if (ClickerPlus.isConnect) {
+                ClickerPlus.readRss(object : BleReadRssiResponse {
+                    override fun onResponse(code: Int, data: Int?) {
+                        if (data != null) {
+                            val h = Handler()
+                            h.post {
+                                infoText.text = "RSSI = " + data
+//                        Toast.makeText(this@LibraryDemoActivity, "RSSI = " + data, Toast.LENGTH_SHORT).show()
+                            }
+
+
+                        }
+                    }
+
+                })
+            }
+        }
+    })
+    //    private var byteArray: ByteArray = ByteArray(230 * 4 * 100)
     private var buffList: ArrayList<ByteArray> = ArrayList<ByteArray>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +81,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
                 audioBufSize,
                 AudioTrack.MODE_STREAM)
         infoText = findViewById(R.id.info_txt)
+        rssiThread.start()
     }
 
     fun clean(v: View){
@@ -239,14 +261,10 @@ class LibraryDemoActivity: AppCompatActivity()  {
             Toast.makeText(this@LibraryDemoActivity, "查找手机，手机进行震动响铃", Toast.LENGTH_SHORT).show()
         }
 
-        @SuppressLint("SetTextI18n")
-        override fun onDataReceive(info: String) {
-            infoText.setText(info + infoText.text.toString())
-        }
-
         override fun onConnect(deviceMac: String) {
             Log.e(TAG, deviceMac + " OnConnect")
             title = "已连接"
+
         }
 
         override fun onDisconnect(deviceMac: String) {

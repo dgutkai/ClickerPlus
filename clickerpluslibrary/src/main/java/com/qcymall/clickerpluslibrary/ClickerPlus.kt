@@ -64,13 +64,13 @@ object ClickerPlus {
 
 
 
-//    var outputStream: FileOutputStream? = null
-//    // 创建BufferedOutputStream对象
-//    var bufferedOutputStream: BufferedOutputStream? = null
-//
-//    var outputStream2: FileOutputStream? = null
-//    // 创建BufferedOutputStream对象
-//    var bufferedOutputStream2: BufferedOutputStream? = null
+    var outputStream: FileOutputStream? = null
+    // 创建BufferedOutputStream对象
+    var bufferedOutputStream: BufferedOutputStream? = null
+
+    var outputStream2: FileOutputStream? = null
+    // 创建BufferedOutputStream对象
+    var bufferedOutputStream2: BufferedOutputStream? = null
 
 
     /**
@@ -402,22 +402,22 @@ object ClickerPlus {
                         mCurrentMac = null
                     }
                 }
-//                if (outputStream != null) {
-//                    try {
-//                        outputStream!!.close();
-//                    } catch (e: Exception) {
-//                        e.printStackTrace();
-//                    }
-//
-//                }
-//                if (bufferedOutputStream != null) {
-//                    try {
-//                        bufferedOutputStream!!.close();
-//                    } catch (e2: Exception) {
-//                        e2.printStackTrace();
-//                    }
-//
-//                }
+                if (outputStream != null) {
+                    try {
+                        outputStream!!.close();
+                    } catch (e: Exception) {
+                        e.printStackTrace();
+                    }
+
+                }
+                if (bufferedOutputStream != null) {
+                    try {
+                        bufferedOutputStream!!.close();
+                    } catch (e2: Exception) {
+                        e2.printStackTrace();
+                    }
+
+                }
             }
         }
     }
@@ -542,23 +542,23 @@ object ClickerPlus {
                             val h = Handler()
                             h.post { mClickerPlusListener!!.onVoicePCMStart() }
                         }
-//                        val speakpath = "/sdcard/DCS/PCM/";
-//                        val file2 = File(speakpath, "abc1.pcm");
-//
-//                        // 如果文件存在则删除
-//                        if (file2.exists()) {
-//                            file2.delete();
-//                        }
-//                        // 在文件系统中根据路径创建一个新的空文件
-//                        try {
-//                            file2.createNewFile();
-//                            // 获取FileOutputStream对象
-//                            outputStream = FileOutputStream(file2);
-//                            // 获取BufferedOutputStream对象
-//                            bufferedOutputStream = BufferedOutputStream(outputStream);
-//                        } catch (e: Exception) {
-//                            e.printStackTrace();
-//                        }
+                        val speakpath = "/sdcard/DCS/PCM/";
+                        val file2 = File(speakpath, "abc1.pcm");
+
+                        // 如果文件存在则删除
+                        if (file2.exists()) {
+                            file2.delete();
+                        }
+                        // 在文件系统中根据路径创建一个新的空文件
+                        try {
+                            file2.createNewFile();
+                            // 获取FileOutputStream对象
+                            outputStream = FileOutputStream(file2);
+                            // 获取BufferedOutputStream对象
+                            bufferedOutputStream = BufferedOutputStream(outputStream);
+                        } catch (e: Exception) {
+                            e.printStackTrace();
+                        }
                     }
                     BLECMDUtil.CMDID_VOICEPCM -> {
                         val result = BLECMDUtil.parsePCMData(parseResult.data)
@@ -566,16 +566,16 @@ object ClickerPlus {
                             val h = Handler()
                             h.post { mClickerPlusListener!!.onVoicePCM(result["pcmData"] as ByteArray, result["index"] as Int) }
                         }
-//                        val pcmData = ByteArray(parseResult.data!!.size - 2)
-//                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
-//                        try {
-//                            // 往文件所在的缓冲输出流中写byte数据
-//                            bufferedOutputStream!!.write(pcmData);
-//                            bufferedOutputStream!!.flush();
-//
-//                        }catch (e: Exception){
-//
-//                        }
+                        val pcmData = ByteArray(parseResult.data!!.size - 2)
+                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
+                        try {
+                            // 往文件所在的缓冲输出流中写byte数据
+                            bufferedOutputStream!!.write(pcmData);
+                            bufferedOutputStream!!.flush();
+
+                        }catch (e: Exception){
+
+                        }
                     }
                     BLECMDUtil.CMDID_VOICEEND -> {
                         if (mClickerPlusListener != null) {
@@ -612,23 +612,23 @@ object ClickerPlus {
                             h.post { mClickerPlusListener!!.onVoiceTmpPCMStart(result) }
                         }
 
-//                        val speakpath = "/sdcard/DCS/PCM/";
-//                        val file2 = File(speakpath, "abc2.pcm");
-//
-//                        // 如果文件存在则删除
-//                        if (file2.exists()) {
-//                            file2.delete();
-//                        }
-//                        // 在文件系统中根据路径创建一个新的空文件
-//                        try {
-//                            file2.createNewFile();
-//                            // 获取FileOutputStream对象
-//                            outputStream2 = FileOutputStream(file2);
-//                            // 获取BufferedOutputStream对象
-//                            bufferedOutputStream2 = BufferedOutputStream(outputStream2);
-//                        } catch (e: Exception) {
-//                            e.printStackTrace();
-//                        }
+                        val speakpath = "/sdcard/DCS/PCM/";
+                        val file2 = File(speakpath, "abc2.pcm");
+
+                        // 如果文件存在则删除
+                        if (file2.exists()) {
+                            file2.delete();
+                        }
+                        // 在文件系统中根据路径创建一个新的空文件
+                        try {
+                            file2.createNewFile();
+                            // 获取FileOutputStream对象
+                            outputStream2 = FileOutputStream(file2);
+                            // 获取BufferedOutputStream对象
+                            bufferedOutputStream2 = BufferedOutputStream(outputStream2);
+                        } catch (e: Exception) {
+                            e.printStackTrace();
+                        }
 
                     }
                     BLECMDUtil.CMDID_VOICE_TMP_PCM -> {
@@ -638,16 +638,16 @@ object ClickerPlus {
                             h.post { mClickerPlusListener!!.onVoiceTmpPCM(result["pcmData"] as ByteArray, result["index"] as Int) }
                         }
 
-//                        val pcmData = ByteArray(parseResult.data!!.size - 2)
-//                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
-//                        try {
-//                            // 往文件所在的缓冲输出流中写byte数据
-//                            bufferedOutputStream2!!.write(pcmData);
-//                            bufferedOutputStream2!!.flush();
-//
-//                        }catch (e: Exception){
-//
-//                        }
+                        val pcmData = ByteArray(parseResult.data!!.size - 2)
+                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
+                        try {
+                            // 往文件所在的缓冲输出流中写byte数据
+                            bufferedOutputStream2!!.write(pcmData);
+                            bufferedOutputStream2!!.flush();
+
+                        }catch (e: Exception){
+
+                        }
                     }
                     BLECMDUtil.CMDID_VOICE_TMP_END -> {
 
@@ -655,22 +655,22 @@ object ClickerPlus {
                             val h = Handler()
                             h.post { mClickerPlusListener!!.onVoiceTmpPCMEnd(parseResult.data) }
                         }
-//                        if (outputStream2 != null) {
-//                            try {
-//                                outputStream2!!.close()
-//                            } catch (e: Exception) {
-//                                e.printStackTrace();
-//                            }
-//
-//                        }
-//                        if (bufferedOutputStream2 != null) {
-//                            try {
-//                                bufferedOutputStream2!!.close();
-//                            } catch (e2: Exception) {
-//                                e2.printStackTrace();
-//                            }
-//
-//                        }
+                        if (outputStream2 != null) {
+                            try {
+                                outputStream2!!.close()
+                            } catch (e: Exception) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                        if (bufferedOutputStream2 != null) {
+                            try {
+                                bufferedOutputStream2!!.close();
+                            } catch (e2: Exception) {
+                                e2.printStackTrace();
+                            }
+
+                        }
 
                     }
 
