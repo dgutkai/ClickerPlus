@@ -110,8 +110,13 @@ object ClickerPlus {
                 Log.e(TAG, "onDeviceFounded " + device.name + " " + device.address)
                 val beancom = Beacon(device.scanRecord)
 //                Log.e(TAG, "onDeviceFounded " + beancom.toString())
-                if (device.name == "Smartisan Clicker+"){
-                    val paritype = beancom.mBytes.last()
+                var paritype = 0.toByte()
+                for (beancomItem in beancom.mItems){
+                    if (beancomItem.type == 0xff){
+                        paritype = beancomItem.bytes.last()
+                    }
+                }
+                if (device.name == "Smartisan Clicker+" || device.name == "Smartisan Clicker"){
                     if (paritype == 0x01.toByte()){
                         searchResponse.onDeviceFounded(device)
                     }
