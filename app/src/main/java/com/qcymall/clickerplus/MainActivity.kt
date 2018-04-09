@@ -157,6 +157,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     val mListener = object: ClickerPlusListener {
+        override fun onDataReceive(info: String) {
+
+        }
+
         // 语音指令缓存上传
         override fun onVoiceTmpPCMStart(header: String) {
 

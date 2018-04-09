@@ -12,6 +12,7 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -42,7 +43,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
     private var audioBufSize: Int = 0
     private var player: AudioTrack? = null // 播放PCM数据的播放器
     private lateinit var infoText: TextView
-
+    private lateinit var rssiText: Button
     private val rssiThread: Thread = Thread({
         while (true) {
             Thread.sleep(1000)
@@ -52,7 +53,8 @@ class LibraryDemoActivity: AppCompatActivity()  {
                         if (data != null) {
                             val h = Handler()
                             h.post {
-                                infoText.text = "RSSI = " + data
+                                rssiText.setText("RSSI = " + data)
+
 //                        Toast.makeText(this@LibraryDemoActivity, "RSSI = " + data, Toast.LENGTH_SHORT).show()
                             }
 
@@ -81,6 +83,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
                 audioBufSize,
                 AudioTrack.MODE_STREAM)
         infoText = findViewById(R.id.info_txt)
+        rssiText = findViewById(R.id.readRssi_btn)
         rssiThread.start()
     }
 
@@ -159,7 +162,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
         ClickerPlus.disconnect()
     }
     override fun onBackPressed() {
-//        super.onBackPressed()
+        super.onBackPressed()
 //         关闭创建的流对象
 //        if (outputStream != null) {
 //            try {
@@ -179,6 +182,10 @@ class LibraryDemoActivity: AppCompatActivity()  {
 //        }
     }
     val mListener = object: ClickerPlusListener {
+        override fun onDataReceive(info: String) {
+            infoText.text = info + "\n" + infoText.text
+        }
+
         // 语音指令缓存上传
         override fun onVoiceTmpPCMStart(header: String) {
 
@@ -457,5 +464,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
         override fun onOTAError(deviceMac: String, error: Int, errorType: Int, message: String?) {
             Log.e(TAG, "onError " + deviceMac + " error:" + error + " errorType:" + errorType + " message:" + message)
         }
+
+
     }
 }

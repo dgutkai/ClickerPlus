@@ -8,7 +8,7 @@ import com.inuker.bluetooth.library.search.SearchResult
  */
 interface ClickerPlusListener {
 
-//    fun onDataReceive(info: String)
+    fun onDataReceive(info: String)
 
     fun onConnect(deviceMac: String)
     fun onDisconnect(deviceMac: String)
