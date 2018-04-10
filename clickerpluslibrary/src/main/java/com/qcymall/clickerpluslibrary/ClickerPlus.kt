@@ -1,6 +1,8 @@
 package com.qcymall.clickerpluslibrary
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.content.Context
 import android.os.Build
 import android.os.Handler
@@ -11,10 +13,7 @@ import com.inuker.bluetooth.library.Constants.STATUS_CONNECTED
 import com.inuker.bluetooth.library.beacon.Beacon
 import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener
 import com.inuker.bluetooth.library.connect.options.BleConnectOptions
-import com.inuker.bluetooth.library.connect.response.BleConnectResponse
-import com.inuker.bluetooth.library.connect.response.BleNotifyResponse
-import com.inuker.bluetooth.library.connect.response.BleReadRssiResponse
-import com.inuker.bluetooth.library.connect.response.BleWriteResponse
+import com.inuker.bluetooth.library.connect.response.*
 import com.inuker.bluetooth.library.search.SearchRequest
 import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.search.response.SearchResponse
@@ -37,9 +36,10 @@ import java.util.*
 object ClickerPlus {
 
     private val TAG = "ClickerPlus"
-    private val SERVICE_UUID = UUID.fromString("6e40caa1-b5a3-f393-e0a9-e50e24dcca9e")//  服务号
-    private val WRITE_UUID = UUID.fromString("6e40cab1-b5a3-f393-e0a9-e50e24dcca9e")//  写特征号
-    private val NOTIFICATION_UUID = UUID.fromString("6e40cab2-b5a3-f393-e0a9-e50e24dcca9e")//  写特征号
+    private var SERVICE_UUID = UUID.fromString("6e40caa1-b5a3-f393-e0a9-e50e24dcca9e")//  服务号
+    private var WRITE_UUID = UUID.fromString("6e40cab1-b5a3-f393-e0a9-e50e24dcca9e")//  写特征号
+    private var NOTIFICATION_UUID = UUID.fromString("6e40cab2-b5a3-f393-e0a9-e50e24dcca9e")//  写特征号
+
     private val PAIR_TIMEOUT = 10000L
     enum class ClickerPlusState{
         pairing,
@@ -63,6 +63,9 @@ object ClickerPlus {
 //    private var mNotificationCharacteristic: BleGattCharacter? = null
 
 
+    private var mTimer: Timer? = null
+    private var mTimerTask: TimerTask? = null
+
 
 //    var outputStream: FileOutputStream? = null
 //    // 创建BufferedOutputStream对象
@@ -82,7 +85,30 @@ object ClickerPlus {
         mContext = WeakReference(context)
         connectDevice()
 
+
     }
+    fun startTimer(){
+        stopTimer()
+        mTimer = Timer()
+        mTimerTask = object: TimerTask(){
+            override fun run() {
+                connectDevice()
+            }
+        }
+        mTimer!!.schedule(mTimerTask, 10000)
+    }
+
+    fun stopTimer(){
+        if (mTimerTask != null) {
+            mTimerTask!!.cancel()
+            mTimerTask = null
+        }
+        if (mTimer != null) {
+            mTimer!!.cancel()
+            mTimer = null
+        }
+    }
+
     fun readRss(response: BleReadRssiResponse){
         if (mCurrentMac != null) {
             return mBluetoothClien!!.readRssi(mCurrentMac, response)
@@ -108,15 +134,20 @@ object ClickerPlus {
 
             override fun onDeviceFounded(device: SearchResult) {
                 Log.e(TAG, "onDeviceFounded " + device.name + " " + device.address)
-                val beancom = Beacon(device.scanRecord)
-//                Log.e(TAG, "onDeviceFounded " + beancom.toString())
-                if (device.name == "Smartisan Clicker+"){
-                    val paritype = beancom.mBytes.last()
-                    if (paritype == 0x01.toByte()){
-                        searchResponse.onDeviceFounded(device)
-                    }
-                }
-
+                searchResponse.onDeviceFounded(device)
+//                val beancom = Beacon(device.scanRecord)
+////                Log.e(TAG, "onDeviceFounded " + beancom.toString())
+//                var paritype = 0.toByte()
+//                for (beancomItem in beancom.mItems){
+//                    if (beancomItem.type == 0xff){
+//                        paritype = beancomItem.bytes.last()
+//                    }
+//                }
+//                if (device.name == "Smartisan Clicker+" || device.name == "Smartisan Clicker"){
+//                    if (paritype == 0x01.toByte()){
+//                        searchResponse.onDeviceFounded(device)
+//                    }
+//                }
 
             }
 
@@ -133,6 +164,7 @@ object ClickerPlus {
         if (isConnect && macString == mCurrentMac){
             return false
         }
+        BluetoothLog.e("connect Device " + macString)
         val options = BleConnectOptions.Builder()
                 .setConnectRetry(3)   // 连接如果失败重试3次
                 .setConnectTimeout(30000)   // 连接超时30s
@@ -141,15 +173,36 @@ object ClickerPlus {
                 .build()
         mBluetoothClien!!.registerConnectStatusListener(macString, mConnectStatusListener)
         mBluetoothClien!!.connect(macString, options, BleConnectResponse { code, data ->
+
             BluetoothLog.e("error code = " + code + ", GattProfile = " + data.toString())
-            val service = data.getService(SERVICE_UUID)
-            val characters = service.characters
-            for (character in characters) {
-                if (character.uuid == WRITE_UUID){
+            var service = data.getService(SERVICE_UUID)
+            if (service == null || SERVICE_UUID.equals(UUID.fromString("0000caa1-0000-1000-8000-00805f9b34fb"))){
+                if (service == null) {
+                    SERVICE_UUID = UUID.fromString("0000caa1-0000-1000-8000-00805f9b34fb")
+                }
+                WRITE_UUID = UUID.fromString("0000cab1-0000-1000-8000-00805f9b34fb")//  写特征号
+                NOTIFICATION_UUID = UUID.fromString("0000cab2-0000-1000-8000-00805f9b34fb")//  写特征号
+                service = data.getService(SERVICE_UUID)
+                val characters = service.characters
+                for (character in characters) {
+                    if (character.uuid == WRITE_UUID){
 //                    mWriteCharacteristic = character
-                }else if (character.uuid == NOTIFICATION_UUID){
+                    }else if (character.uuid == NOTIFICATION_UUID){
 //                    mNotificationCharacteristic = character
-                    mBluetoothClien!!.notify(macString, SERVICE_UUID, NOTIFICATION_UUID, mNotifyRsp)
+                        mBluetoothClien!!.indicate(macString, SERVICE_UUID, NOTIFICATION_UUID, mNotifyRsp)
+//                        mBluetoothClien!!.notify(macString, SERVICE_UUID, NOTIFICATION_UUID, mNotifyRsp)
+                    }
+                }
+            }else{
+                val characters = service.characters
+                for (character in characters) {
+                    if (character.uuid == WRITE_UUID){
+//                    mWriteCharacteristic = character
+                    }else if (character.uuid == NOTIFICATION_UUID){
+//                    mNotificationCharacteristic = character
+                        mBluetoothClien!!.notify(macString, SERVICE_UUID, NOTIFICATION_UUID, mNotifyRsp)
+
+                    }
                 }
             }
         })
@@ -203,6 +256,7 @@ object ClickerPlus {
     }
 
     fun findDevice(): Boolean{
+//        startTimer()
         if (!isPair){
             return false
         }
@@ -367,6 +421,7 @@ object ClickerPlus {
             isConnect = status == STATUS_CONNECTED
             if (isConnect){
                 mCurrentMac = mac
+                stopTimer()
 //                if (isSendFlag){
 //                    mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID, BLECMDUtil.createPariCMD(mFlagID!!), response)
 //                }else{
@@ -394,7 +449,11 @@ object ClickerPlus {
                     }
                 }
             }else{
+                if (isPair){
+                    startTimer()
+                }
                 isPair = false
+
                 if (mClickerPlusListener != null) {
                     val h = Handler()
                     h.post {
@@ -427,11 +486,12 @@ object ClickerPlus {
     }
     private val mNotifyRsp = object : BleNotifyResponse {
         override fun onNotify(service: UUID, character: UUID, value: ByteArray) {
+            Log.e(TAG, "onNotify " + service.toString())
             if (service == SERVICE_UUID && character == NOTIFICATION_UUID) {
 
                 if (mClickerPlusListener != null){
                     val h = Handler()
-//                    h.post { mClickerPlusListener!!.onDataReceive(String.format("Notify: %s -> %d\n", ByteUtils.byteToString(value), Date().time)) }
+                    h.post { mClickerPlusListener!!.onDataReceive(String.format("Notify: %s -> %d\n", ByteUtils.byteToString(value), Date().time)) }
                 }
                 val parseResult = BLECMDUtil.parseCMD(value) ?: return
 //                Log.e(TAG, String.format("Notify: %s %d \n%d", ByteUtils.byteToString(parseResult.data), parseResult.id, Date().time))
@@ -542,6 +602,8 @@ object ClickerPlus {
                             val h = Handler()
                             h.post { mClickerPlusListener!!.onVoicePCMStart() }
                         }
+
+
 //                        val speakpath = "/sdcard/DCS/PCM/";
 //                        val file2 = File(speakpath, "abc1.pcm");
 //
@@ -549,7 +611,7 @@ object ClickerPlus {
 //                        if (file2.exists()) {
 //                            file2.delete();
 //                        }
-//                        // 在文件系统中根据路径创建一个新的空文件
+                        // 在文件系统中根据路径创建一个新的空文件
 //                        try {
 //                            file2.createNewFile();
 //                            // 获取FileOutputStream对象
@@ -566,8 +628,8 @@ object ClickerPlus {
                             val h = Handler()
                             h.post { mClickerPlusListener!!.onVoicePCM(result["pcmData"] as ByteArray, result["index"] as Int) }
                         }
-//                        val pcmData = ByteArray(parseResult.data!!.size - 2)
-//                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
+                        val pcmData = ByteArray(parseResult.data!!.size - 2)
+                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
 //                        try {
 //                            // 往文件所在的缓冲输出流中写byte数据
 //                            bufferedOutputStream!!.write(pcmData);
@@ -638,8 +700,8 @@ object ClickerPlus {
                             h.post { mClickerPlusListener!!.onVoiceTmpPCM(result["pcmData"] as ByteArray, result["index"] as Int) }
                         }
 
-//                        val pcmData = ByteArray(parseResult.data!!.size - 2)
-//                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
+                        val pcmData = ByteArray(parseResult.data!!.size - 2)
+                        System.arraycopy(parseResult.data, 2, pcmData, 0, pcmData.size)
 //                        try {
 //                            // 往文件所在的缓冲输出流中写byte数据
 //                            bufferedOutputStream2!!.write(pcmData);

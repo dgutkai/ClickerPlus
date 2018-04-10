@@ -12,6 +12,7 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -42,8 +43,30 @@ class LibraryDemoActivity: AppCompatActivity()  {
     private var audioBufSize: Int = 0
     private var player: AudioTrack? = null // 播放PCM数据的播放器
     private lateinit var infoText: TextView
+    private lateinit var rssiText: Button
+    private val rssiThread: Thread = Thread({
+        while (true) {
+            Thread.sleep(1000)
+            if (ClickerPlus.isConnect) {
+                ClickerPlus.readRss(object : BleReadRssiResponse {
+                    override fun onResponse(code: Int, data: Int?) {
+                        if (data != null) {
+                            val h = Handler()
+                            h.post {
+                                rssiText.setText("RSSI = " + data)
 
-//    private var byteArray: ByteArray = ByteArray(230 * 4 * 100)
+//                        Toast.makeText(this@LibraryDemoActivity, "RSSI = " + data, Toast.LENGTH_SHORT).show()
+                            }
+
+
+                        }
+                    }
+
+                })
+            }
+        }
+    })
+    //    private var byteArray: ByteArray = ByteArray(230 * 4 * 100)
     private var buffList: ArrayList<ByteArray> = ArrayList<ByteArray>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +83,8 @@ class LibraryDemoActivity: AppCompatActivity()  {
                 audioBufSize,
                 AudioTrack.MODE_STREAM)
         infoText = findViewById(R.id.info_txt)
+        rssiText = findViewById(R.id.readRssi_btn)
+        rssiThread.start()
     }
 
     fun clean(v: View){
@@ -137,7 +162,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
         ClickerPlus.disconnect()
     }
     override fun onBackPressed() {
-//        super.onBackPressed()
+        super.onBackPressed()
 //         关闭创建的流对象
 //        if (outputStream != null) {
 //            try {
@@ -157,6 +182,10 @@ class LibraryDemoActivity: AppCompatActivity()  {
 //        }
     }
     val mListener = object: ClickerPlusListener {
+        override fun onDataReceive(info: String) {
+            infoText.text = info + "\n" + infoText.text
+        }
+
         // 语音指令缓存上传
         override fun onVoiceTmpPCMStart(header: String) {
 
@@ -239,14 +268,10 @@ class LibraryDemoActivity: AppCompatActivity()  {
             Toast.makeText(this@LibraryDemoActivity, "查找手机，手机进行震动响铃", Toast.LENGTH_SHORT).show()
         }
 
-        @SuppressLint("SetTextI18n")
-        override fun onDataReceive(info: String) {
-            infoText.setText(info + infoText.text.toString())
-        }
-
         override fun onConnect(deviceMac: String) {
             Log.e(TAG, deviceMac + " OnConnect")
             title = "已连接"
+
         }
 
         override fun onDisconnect(deviceMac: String) {
@@ -439,5 +464,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
         override fun onOTAError(deviceMac: String, error: Int, errorType: Int, message: String?) {
             Log.e(TAG, "onError " + deviceMac + " error:" + error + " errorType:" + errorType + " message:" + message)
         }
+
+
     }
 }

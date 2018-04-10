@@ -157,6 +157,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     val mListener = object: ClickerPlusListener {
+        override fun onDataReceive(info: String) {
+
+        }
+
         // 语音指令缓存上传
         override fun onVoiceTmpPCMStart(header: String) {
 
@@ -175,9 +179,6 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "寻找手机中 ")
         }
 
-        @SuppressLint("SetTextI18n")
-        override fun onDataReceive(info: String) {
-        }
 
         override fun onConnect(deviceMac: String) {
             Log.e(TAG, deviceMac + " OnConnect")

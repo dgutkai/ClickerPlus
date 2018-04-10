@@ -93,16 +93,7 @@
         app:layout_constraintTop_toBottomOf="@id/ota_btn5"
         app:layout_constraintRight_toRightOf="parent"
         android:onClick="readRssiClick"/>
-    <TextView
-        android:id="@+id/info_txt"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ota_btn5"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:scrollbars="vertical"
-        />
+
     <Button
         android:id="@+id/clean_btn"
         android:layout_width="wrap_content"
@@ -118,4 +109,14 @@
         app:layout_constraintRight_toRightOf="parent"
         android:text="断开连接"
         android:onClick="disconnect"/>
+    <TextView
+        android:id="@+id/info_txt"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/readRssi_btn"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:scrollbars="vertical"
+        />
 </android.support.constraint.ConstraintLayout>
