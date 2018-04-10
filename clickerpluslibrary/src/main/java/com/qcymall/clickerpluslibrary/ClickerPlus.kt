@@ -189,8 +189,8 @@ object ClickerPlus {
 //                    mWriteCharacteristic = character
                     }else if (character.uuid == NOTIFICATION_UUID){
 //                    mNotificationCharacteristic = character
-//                        mBluetoothClien!!.indicate(macString, SERVICE_UUID, NOTIFICATION_UUID, mNotifyRsp)
-                        mBluetoothClien!!.notify(macString, SERVICE_UUID, NOTIFICATION_UUID, mNotifyRsp)
+                        mBluetoothClien!!.indicate(macString, SERVICE_UUID, NOTIFICATION_UUID, mNotifyRsp)
+//                        mBluetoothClien!!.notify(macString, SERVICE_UUID, NOTIFICATION_UUID, mNotifyRsp)
                     }
                 }
             }else{
