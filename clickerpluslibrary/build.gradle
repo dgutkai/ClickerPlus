@@ -4,7 +4,9 @@ apply plugin: 'kotlin-android'
 android {
     compileSdkVersion 26
 
-
+    lintOptions {
+        abortOnError false
+    }
 
     defaultConfig {
         minSdkVersion 19

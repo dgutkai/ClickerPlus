@@ -24,6 +24,8 @@ object BLECMDUtil {
     val CMDID_FIND = 0x5010        // 查找设备
     val CMDID_BATTERY = 0x5011      // 获取电池电量
     val CMDID_INCREASE = 0x5018      // 获取MIC增益
+    val CMDID_VERSION  = 0x500F      // 获取版本号
+
 
     val CMDID_OTA = 0x5012      // OTA升级
     val CMDID_TIME = 0x5013     // 时间同步
@@ -181,6 +183,11 @@ object BLECMDUtil {
     fun createBatteryCMD(): ByteArray{
         return packageCMD(CMDID_BATTERY, null)
     }
+
+    fun createVersionCMD(): ByteArray{
+        return packageCMD(CMDID_VERSION, null)
+    }
+
     fun createIncreaseCMD(value: Int): ByteArray{
         var v = value
         if (v < 0){
@@ -258,6 +265,14 @@ object BLECMDUtil {
         }
         return false
     }
+
+    fun parseVersionCMD(data: ByteArray?): String{
+        if (data != null && data.isNotEmpty()){
+            return String(data, 1, data.size - 1)
+        }
+        return ""
+    }
+
     fun parsePCMData(data: ByteArray?): HashMap<String, Any>{
         if (data == null || data.isEmpty()) {
             val resultMap = HashMap<String, Any>()

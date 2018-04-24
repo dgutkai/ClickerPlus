@@ -1,10 +1,7 @@
 package com.qcymall.clickerplus
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
@@ -13,21 +10,13 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.SwipeRefreshLayout
 import android.util.Log
-import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.SimpleAdapter
-import android.widget.Toast
-import com.inuker.bluetooth.library.BluetoothClient
-import com.inuker.bluetooth.library.beacon.Beacon
-import com.inuker.bluetooth.library.connect.listener.BluetoothStateListener
-import com.inuker.bluetooth.library.search.SearchRequest
 import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.search.response.SearchResponse
-import com.inuker.bluetooth.library.utils.BluetoothLog
 import com.inuker.bluetooth.library.utils.ByteUtils
-import com.qcymall.clickerpluslibrary.ClickerPlus
-import com.qcymall.clickerpluslibrary.ClickerPlusListener
+import com.qcymall.clickerpluslibrary.*
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -38,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var deviceAdapter: SimpleAdapter
     private lateinit var deviceData: ArrayList<HashMap<String, Any>>
 
-    lateinit var mBluetoothClien: BluetoothClient
+//    lateinit var mBluetoothClien: BluetoothClient
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -54,7 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        mBluetoothClien = BluetoothClient(this)
+//        mBluetoothClien = BluetoothClient(this)
 
         ClickerPlus.mClickerPlusListener = mListener
         initDeviceListView()
@@ -81,13 +70,13 @@ class MainActivity : AppCompatActivity() {
         deviceData.clear()
         deviceAdapter.notifyDataSetChanged()
         refreshLayout.setRefreshing(true)
-        ClickerPlus.scanDevice(object : SearchResponse {
-            override fun onSearchStarted() {
+        ClickerPlus.scanDevice(object: SearchResponse{
 
+            override fun onSearchStarted() {
+                Log.e(TAG, "start")
             }
 
             override fun onDeviceFounded(device: SearchResult) {
-                val beacon = Beacon(device.scanRecord)
                 if (!isHaveDevice(device.address)) {
                     val data = HashMap<String, Any>()
                     data.put("name", device.name)
@@ -95,7 +84,7 @@ class MainActivity : AppCompatActivity() {
                     data.put("btdevice", device.device)
                     deviceData.add(data)
                     deviceAdapter.notifyDataSetChanged()
-                    BluetoothLog.e(String.format("beacon for %s\n%s", device.address, beacon.toString()))
+                    Log.e(TAG, String.format("beacon for %s", device.address))
                 }
             }
 
@@ -110,15 +99,15 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private val mBluetoothStateListener = object : BluetoothStateListener() {
-        override fun onBluetoothStateChanged(openOrClosed: Boolean) {
-            if (openOrClosed) {
-                scanBleDevice()
-            }
-            mBluetoothClien.unregisterBluetoothStateListener(this)
-        }
-
-    }
+//    private val mBluetoothStateListener = object : BluetoothStateListener() {
+//        override fun onBluetoothStateChanged(openOrClosed: Boolean) {
+//            if (openOrClosed) {
+//                scanBleDevice()
+//            }
+//            mBluetoothClien.unregisterBluetoothStateListener(this)
+//        }
+//
+//    }
 
     private fun isHaveDevice(mac: String?): Boolean {
         if (mac == null) {
@@ -157,9 +146,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     val mListener = object: ClickerPlusListener {
-        override fun onDataReceive(info: String) {
-
-        }
+//        override fun onDataReceive(info: String) {
+//
+//        }
 
         // 语音指令缓存上传
         override fun onVoiceTmpPCMStart(header: String) {
@@ -213,6 +202,9 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        override fun onVersion(version: String) {
+            Log.e(TAG, "onVersion " + version)
+        }
         override fun onClick() {
             Log.e(TAG, "onClick")
         }
@@ -263,9 +255,8 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, deviceMac + " onOTAStart")
         }
 
-        override fun onOTAProgressChanged(deviceMac: String, percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
-            Log.e(TAG, "onProgressChanged " + deviceMac + " progress:" + percent + " speed:" + speed +
-                    " avgSpeed:" + avgSpeed + " currentPart:" + currentPart + " partsTotal:" + partsTotal)
+        override fun onOTAProgressChanged(deviceMac: String, percent: Int) {
+            Log.e(TAG, "onProgressChanged " + deviceMac + " progress:" + percent)
         }
 
         override fun onOTACompleted(deviceMac: String) {

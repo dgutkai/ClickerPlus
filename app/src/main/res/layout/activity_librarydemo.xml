@@ -50,28 +50,28 @@
         app:layout_constraintHorizontal_weight="1"
         android:onClick="batteryClick"/>
 
-    <Button
-        android:id="@+id/ota_btn4"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:onClick="ota4Click"
-        android:text="OTA升级4"
-        app:layout_constraintHorizontal_chainStyle="spread"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@id/ota_btn5"
-        app:layout_constraintTop_toBottomOf="@id/find_btn"
-        />
+    <!--<Button-->
+        <!--android:id="@+id/ota_btn4"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:onClick="ota4Click"-->
+        <!--android:text="OTA升级4"-->
+        <!--app:layout_constraintHorizontal_chainStyle="spread"-->
+        <!--app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--app:layout_constraintRight_toLeftOf="@id/ota_btn5"-->
+        <!--app:layout_constraintTop_toBottomOf="@id/find_btn"-->
+        <!--/>-->
 
-    <Button
-        android:id="@+id/ota_btn5"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="OTA升级5"
+    <!--<Button-->
+        <!--android:id="@+id/ota_btn5"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="OTA升级5"-->
 
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/battery_btn"
-        app:layout_constraintLeft_toRightOf="@id/ota_btn4"
-        android:onClick="ota5Click"/>
+        <!--app:layout_constraintRight_toRightOf="parent"-->
+        <!--app:layout_constraintTop_toBottomOf="@id/battery_btn"-->
+        <!--app:layout_constraintLeft_toRightOf="@id/ota_btn4"-->
+        <!--android:onClick="ota5Click"/>-->
 
     <Button
         android:id="@+id/micincrease_btn"
@@ -80,8 +80,8 @@
         android:text="MIC增益"
 
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ota_btn4"
-        app:layout_constraintRight_toRightOf="@id/ota_btn4"
+        app:layout_constraintTop_toBottomOf="@id/find_btn"
+        app:layout_constraintRight_toRightOf="@id/find_btn"
         android:onClick="minincreaseClick"/>
     <Button
         android:id="@+id/readRssi_btn"
@@ -90,9 +90,40 @@
         android:text="读取RSSI"
 
         app:layout_constraintLeft_toRightOf="@id/micincrease_btn"
-        app:layout_constraintTop_toBottomOf="@id/ota_btn5"
+        app:layout_constraintTop_toBottomOf="@id/battery_btn"
         app:layout_constraintRight_toRightOf="parent"
         android:onClick="readRssiClick"/>
+    <Button
+        android:id="@+id/ota_btn6"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="OTA测试文件1"
+
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/micincrease_btn"
+        app:layout_constraintRight_toRightOf="@id/micincrease_btn"
+        android:onClick="ota6Click"/>
+    <Button
+        android:id="@+id/ota_btn7"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="OTA测试文件2"
+
+        app:layout_constraintLeft_toRightOf="@id/micincrease_btn"
+        app:layout_constraintTop_toBottomOf="@id/readRssi_btn"
+        app:layout_constraintRight_toRightOf="parent"
+        android:onClick="ota7Click"/>
+    <Button
+        android:id="@+id/readVersion_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="读取版本号"
+        app:layout_constraintLeft_toLeftOf="parent"
+
+        app:layout_constraintLeft_toRightOf="@id/ota_btn6"
+        app:layout_constraintTop_toBottomOf="@id/ota_btn6"
+        app:layout_constraintRight_toRightOf="parent"
+        android:onClick="readVersionClick"/>
 
     <Button
         android:id="@+id/clean_btn"
@@ -115,7 +146,7 @@
         android:layout_height="0dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/readRssi_btn"
+        app:layout_constraintTop_toBottomOf="@id/readVersion_btn"
         app:layout_constraintBottom_toBottomOf="parent"
         android:scrollbars="vertical"
         />

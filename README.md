@@ -47,7 +47,7 @@ clicker+闪念胶囊时候调用。
 ## Library调用方法
 ### 1、初始化
 ```kotlin
-initClicker(context: Context)
+fun initClicker(context: Context)
 ```
 一般在使用该库时首先运行该方法。可以创建一个继承Application的BaseApplication，在BaseApplication中调用初始化方法，像下面一样。
 ```kotlin
@@ -219,6 +219,38 @@ class MainActivity : AppCompatActivity() {
             }
 }
 ```
+### 3、搜索查找Clicker
+使用Library提供的搜索方法搜索Clicker，该方法将过滤掉其他非clicker设备，已便让搜索列表更加简洁。
+~~~kotlin
+ClickerPlus.scanDevice(object : SearchResponse {
+    override fun onSearchStarted() {
+        // 搜索BLE设备开始
+    }
+
+    override fun onDeviceFounded(device: SearchResult) {
+        // 搜索到Clicker设备，这里可以将信息展示在ListView上。
+        val beacon = Beacon(device.scanRecord)
+        if (!isHaveDevice(device.address)) {
+            val data = HashMap<String, Any>()
+            data.put("name", device.name)
+            data.put("mac", device.address)
+            data.put("btdevice", device.device)
+            deviceData.add(data)
+            deviceAdapter.notifyDataSetChanged()
+            BluetoothLog.e(String.format("beacon for %s\n%s", device.address, beacon.toString()))
+        }
+    }
+
+    override fun onSearchStopped() {
+        refreshLayout.isRefreshing = false
+    }
+
+    override fun onSearchCanceled() {
+        refreshLayout.isRefreshing = false
+    }
+})
+~~~
+
 ### 2、连接配对
 配对连接使用ClickerPlus.pairDevice(deviceMac: String, flagID: String)方法，其中传入需要连接配对设备的MAC地址以及用户唯一的字符串（不超过7个字符）。
 ~~~kotlin
@@ -230,4 +262,54 @@ fun pairClick(v: View){
 }
 ~~~
 ### 3、设备回连
+Library能够根据历史连接信息在启动时可自动进行连接。在没有设备连接的时候，还会不断搜索BLE设备，以便自动回连。
+若需要手动连接设备，可使用上面**"连接配对"**的方法进行连接。
 ### 4、取消配对
+取消配对的设备。
+~~~kotlin
+/**
+ * @param isAll 是否解除设备的所有绑定
+ */
+fun unPairDevice(isAll: Boolean): Boolean
+~~~
+### 5、查找设备
+~~~kotlin
+fun findDevice(): Boolean
+~~~
+### 6、获取电池电量
+~~~kotlin
+fun getBattery(): Boolean
+~~~
+### 7、MIC增益
+~~~kotlin
+/**
+ * @param value 增益的值
+ * @return 没有连接或配对返回false。
+ */
+fun micIncrease(value: Int): Boolean
+~~~
+### 8、获取版本号
+~~~kotlin
+fun getVersion(): Boolean
+~~~
+### 9、获取信号强度RSSI
+~~~kotlin
+ClickerPlus.readRss(object : BleReadRssiResponse {
+    override fun onResponse(code: Int, data: Int?) {
+        if (data != null) {
+            val h = Handler()
+            h.post {
+
+                Toast.makeText(this@LibraryDemoActivity, "RSSI = " + data, Toast.LENGTH_SHORT).show()
+            }
+
+
+        }
+    }
+
+})
+~~~
+### 10、OTA升级
+~~~kotlin
+fun otaUpdate(context: Context, filePath: String): Boolean
+~~~

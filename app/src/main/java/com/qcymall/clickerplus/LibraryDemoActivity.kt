@@ -1,6 +1,5 @@
 package com.qcymall.clickerplus
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.DialogInterface
 import android.media.AudioFormat
@@ -16,16 +15,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.inuker.bluetooth.library.connect.listener.ReadRssiListener
 import com.inuker.bluetooth.library.connect.response.BleReadRssiResponse
-import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.utils.ByteUtils
 import com.qcymall.clickerpluslibrary.ClickerPlus
 import com.qcymall.clickerpluslibrary.ClickerPlusListener
-import kotlinx.android.synthetic.main.activity_librarydemo.*
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.nio.ByteBuffer
 import java.util.*
 
 /**
@@ -48,7 +42,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
         while (true) {
             Thread.sleep(1000)
             if (ClickerPlus.isConnect) {
-                ClickerPlus.readRss(object : BleReadRssiResponse {
+                ClickerPlus.readRss(object: BleReadRssiResponse {
                     override fun onResponse(code: Int, data: Int?) {
                         if (data != null) {
                             val h = Handler()
@@ -74,7 +68,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
         val mapData = intent.getSerializableExtra("data") as HashMap<String, Any>
         mDeviceMAC = mapData["mac"] as String
         mDevice = mapData["btdevice"] as BluetoothDevice
-        Log.e(TAG, mapData["name"] as String?)
+//        Log.e(TAG, mapData["name"] as String?)
         ClickerPlus.mClickerPlusListener = mListener
         audioBufSize = 230 * 16
         player = AudioTrack(AudioManager.STREAM_MUSIC, 8000,
@@ -106,33 +100,16 @@ class LibraryDemoActivity: AppCompatActivity()  {
     fun batteryClick(v: View){
         ClickerPlus.getBattery()
     }
-
-    fun ota4Click(v: View){
-//        val speakpath = "/sdcard/DCS/PCM/";
-//        val file2 = File(speakpath, "abc2.pcm");
-//
-//        // 如果文件存在则删除
-//        if (file2.exists()) {
-//            file2.delete();
-//        }
-//        // 在文件系统中根据路径创建一个新的空文件
-//        try {
-//            file2.createNewFile();
-//            // 获取FileOutputStream对象
-//            outputStream = FileOutputStream(file2);
-//            // 获取BufferedOutputStream对象
-//            bufferedOutputStream = BufferedOutputStream(outputStream);
-//        } catch (e: Exception) {
-//            e.printStackTrace();
-//        }
-        ClickerPlus.otaDFU(this, "/storage/emulated/0/360Download/sdk13_app_4(1).zip")
+    fun ota6Click(v: View){
+        // Todo: 修改升级文件路径
+        ClickerPlus.otaUpdate(this, "/sdcard/A001/Smartisan_Clicker.img")
     }
-    fun ota5Click(v: View){
-        ClickerPlus.otaDFU(this, "/storage/emulated/0/360Download/sdk13_app_5(1).zip")
+    fun ota7Click(v: View){
+        // Todo: 修改升级文件路径
+        ClickerPlus.otaUpdate(this, "/sdcard/A001/Smartisan_Clicker.img")
     }
-
     fun minincreaseClick(v: View){
-        val editText = EditText(this);
+        val editText = EditText(this)
         val dialog = AlertDialog.Builder(this).setTitle("输入值").setView(editText)
                 .setPositiveButton("确定", object :DialogInterface.OnClickListener{
                     override fun onClick(p0: DialogInterface?, p1: Int) {
@@ -143,7 +120,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
         dialog.show()
     }
     fun readRssiClick(v: View){
-        ClickerPlus.readRss(object : BleReadRssiResponse{
+        ClickerPlus.readRss(object:BleReadRssiResponse {
             override fun onResponse(code: Int, data: Int?) {
                 if (data != null) {
                     val h = Handler()
@@ -158,6 +135,9 @@ class LibraryDemoActivity: AppCompatActivity()  {
         })
     }
 
+    fun readVersionClick(v: View){
+        ClickerPlus.getVersion();
+    }
     fun disconnect(v: View){
         ClickerPlus.disconnect()
     }
@@ -182,9 +162,9 @@ class LibraryDemoActivity: AppCompatActivity()  {
 //        }
     }
     val mListener = object: ClickerPlusListener {
-        override fun onDataReceive(info: String) {
-            infoText.text = info + "\n" + infoText.text
-        }
+//        override fun onDataReceive(info: String) {
+//            infoText.text = info + "\n" + infoText.text
+//        }
 
         // 语音指令缓存上传
         override fun onVoiceTmpPCMStart(header: String) {
@@ -446,23 +426,32 @@ class LibraryDemoActivity: AppCompatActivity()  {
 
         override fun onBatteryChange(percent: Int) {
             Log.e(TAG, "onBatteryChange percent = " + percent)
+            infoText.text = "电池电量：" + percent + "%\n" + infoText.text
+        }
+
+        override fun onVersion(version: String) {
+            Log.e(TAG, "onVersion " + version)
+            infoText.text = "软件版本：" + version + "\n" + infoText.text
         }
 
         override fun onOTAStart(deviceMac: String) {
             Log.e(TAG, deviceMac + " onOTAStart")
+            infoText.text = "OTA升级开始" + "\n" + infoText.text
         }
 
-        override fun onOTAProgressChanged(deviceMac: String, percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
-            Log.e(TAG, "onProgressChanged " + deviceMac + " progress:" + percent + " speed:" + speed +
-                    " avgSpeed:" + avgSpeed + " currentPart:" + currentPart + " partsTotal:" + partsTotal)
+        override fun onOTAProgressChanged(deviceMac: String, percent: Int) {
+            Log.e(TAG, "onProgressChanged " + deviceMac + " progress:" + percent)
+            infoText.text = "OTA升级进度 " + percent + "%\n" + infoText.text
         }
 
         override fun onOTACompleted(deviceMac: String) {
             Log.e(TAG, deviceMac + " onOTACompleted")
+            infoText.text = "OTA升级完成" + "\n" + infoText.text
         }
 
         override fun onOTAError(deviceMac: String, error: Int, errorType: Int, message: String?) {
             Log.e(TAG, "onError " + deviceMac + " error:" + error + " errorType:" + errorType + " message:" + message)
+            infoText.text = "OTA升级出错" + "\n" + infoText.text
         }
 
 

@@ -1,8 +1,6 @@
 package com.qcymall.clickerpluslibrary
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
 import android.content.Context
 import android.os.Build
 import android.os.Handler
@@ -18,15 +16,13 @@ import com.inuker.bluetooth.library.search.SearchRequest
 import com.inuker.bluetooth.library.search.SearchResult
 import com.inuker.bluetooth.library.search.response.SearchResponse
 import com.inuker.bluetooth.library.utils.BluetoothLog
-import com.inuker.bluetooth.library.utils.ByteUtils
 import com.qcymall.clickerpluslibrary.dfu.DFUService
+import com.qcymall.clickerpluslibrary.ota.OTAListener
+import com.qcymall.clickerpluslibrary.ota.OTAService
 import com.qcymall.clickerpluslibrary.utils.BLECMDUtil
 import no.nordicsemi.android.dfu.DfuProgressListenerAdapter
 import no.nordicsemi.android.dfu.DfuServiceInitiator
 import no.nordicsemi.android.dfu.DfuServiceListenerHelper
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileOutputStream
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -48,6 +44,7 @@ object ClickerPlus {
     }
 
 
+    private var deviceType = 0
     private val SP_NAME = "ClickerPlus_sp"
     private var mBluetoothClien: BluetoothClient? = null
     var isConnect: Boolean = false
@@ -118,15 +115,14 @@ object ClickerPlus {
     // TODO: 发布的时候删掉
     fun disconnect(){
         Log.e(TAG, "disconnect()")
-        mBluetoothClien!!.disconnect(mCurrentMac);
+        mBluetoothClien!!.disconnect(mCurrentMac)
         mCurrentMac = null;
     }
     fun scanDevice(searchResponse: SearchResponse){
         val request = SearchRequest.Builder()
                 .searchBluetoothLeDevice(3000, 3)   // 先扫BLE设备3次，每次3s
                 .build()
-
-        mBluetoothClien!!.search(request, object : SearchResponse {
+        mBluetoothClien!!.search(request, object: SearchResponse {
             override fun onSearchStarted() {
                 Log.e(TAG, "onSearchStarted")
                 searchResponse.onSearchStarted()
@@ -134,20 +130,20 @@ object ClickerPlus {
 
             override fun onDeviceFounded(device: SearchResult) {
                 Log.e(TAG, "onDeviceFounded " + device.name + " " + device.address)
-                searchResponse.onDeviceFounded(device)
-//                val beancom = Beacon(device.scanRecord)
-////                Log.e(TAG, "onDeviceFounded " + beancom.toString())
-//                var paritype = 0.toByte()
-//                for (beancomItem in beancom.mItems){
-//                    if (beancomItem.type == 0xff){
-//                        paritype = beancomItem.bytes.last()
-//                    }
-//                }
-//                if (device.name == "Smartisan Clicker+" || device.name == "Smartisan Clicker"){
-//                    if (paritype == 0x01.toByte()){
-//                        searchResponse.onDeviceFounded(device)
-//                    }
-//                }
+//                searchResponse.onDeviceFounded(device)
+                val beancom = Beacon(device.scanRecord)
+//                Log.e(TAG, "onDeviceFounded " + beancom.toString())
+                var paritype = 0.toByte()
+                for (beancomItem in beancom.mItems){
+                    if (beancomItem.type == 0xff){
+                        paritype = beancomItem.bytes.last()
+                    }
+                }
+                if (device.name == "Smartisan Clicker+" || device.name == "Smartisan Clicker"){
+                    if (paritype == 0x01.toByte()){
+                        searchResponse.onDeviceFounded(device)
+                    }
+                }
 
             }
 
@@ -180,6 +176,7 @@ object ClickerPlus {
                 if (service == null) {
                     SERVICE_UUID = UUID.fromString("0000caa1-0000-1000-8000-00805f9b34fb")
                 }
+                deviceType = 1
                 WRITE_UUID = UUID.fromString("0000cab1-0000-1000-8000-00805f9b34fb")//  写特征号
                 NOTIFICATION_UUID = UUID.fromString("0000cab2-0000-1000-8000-00805f9b34fb")//  写特征号
                 service = data.getService(SERVICE_UUID)
@@ -194,6 +191,7 @@ object ClickerPlus {
                     }
                 }
             }else{
+                deviceType = 0
                 val characters = service.characters
                 for (character in characters) {
                     if (character.uuid == WRITE_UUID){
@@ -280,6 +278,11 @@ object ClickerPlus {
         return true
 
     }
+
+    /**
+     * @param value 增益的值
+     * @return 没有连接或配对返回false。
+     */
     fun micIncrease(value: Int): Boolean{
         if (!isPair){
             return false
@@ -292,7 +295,39 @@ object ClickerPlus {
         return true
 
     }
-    fun otaDFU(context: Context, filePath: String): Boolean{
+
+    fun getVersion(): Boolean{
+        if (!isPair){
+            return false
+        }
+        if (!isConnect || mCurrentMac == null){
+            return false
+        }
+        mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
+                BLECMDUtil.createVersionCMD(), response)
+        return true
+
+    }
+
+    fun otaUpdate(context: Context, filePath: String): Boolean{
+        if (deviceType == 0){
+            return otaDFU(context, filePath)
+        }else{
+            return otaDialog(filePath)
+        }
+    }
+    private fun otaDialog(filePath: String): Boolean{
+        if (!isPair){
+            return false
+        }
+        if (!isConnect || mCurrentMac == null){
+            return false
+        }
+        val otaService = OTAService(mBluetoothClien!!, mCurrentMac!!)
+        otaService.otaUpdate(filePath, mOTAListener)
+        return true
+    }
+    private fun otaDFU(context: Context, filePath: String): Boolean{
         if (!isPair){
             return false
         }
@@ -307,7 +342,7 @@ object ClickerPlus {
                     .searchBluetoothLeDevice(3000, 3)   // 先扫BLE设备3次，每次3s
                     .build()
 
-            mBluetoothClien!!.search(request, object : SearchResponse {
+            mBluetoothClien!!.search(request, object: SearchResponse {
                 override fun onSearchStarted() {
                     Log.e(TAG, "onSearchStarted")
                 }
@@ -346,6 +381,43 @@ object ClickerPlus {
         starter.start(context, DFUService::class.java)
     }
 
+    private val mOTAListener = object : OTAListener{
+        override fun otaStart(devicemac: String) {
+            if (mClickerPlusListener != null) {
+                val h = Handler()
+                h.post {
+                    mClickerPlusListener!!.onOTAStart(devicemac)
+                }
+            }
+        }
+
+        override fun otaCompleted(devicemac: String) {
+            if (mClickerPlusListener != null) {
+                val h = Handler()
+                h.post {
+                    mClickerPlusListener!!.onOTACompleted(devicemac)
+                }
+            }
+        }
+
+        override fun otaProgressChanged(devicemac: String, percent: Int) {
+            if (mClickerPlusListener != null) {
+                val h = Handler()
+                h.post {
+                    mClickerPlusListener!!.onOTAProgressChanged(devicemac, percent)
+                }
+            }
+        }
+
+        override fun otaError(devicemac: String, error: Int) {
+            if (mClickerPlusListener != null) {
+                val h = Handler()
+                h.post {
+                    mClickerPlusListener!!.onOTAError(devicemac, error, 0, "update error")
+                }
+            }
+        }
+    }
     private val mDfuProgressListener = object : DfuProgressListenerAdapter() {
         override fun onDeviceConnecting(deviceAddress: String?) {
             Log.e("mDfuProgressListener", "onDeviceConnecting " + deviceAddress )
@@ -397,7 +469,7 @@ object ClickerPlus {
             if (mClickerPlusListener != null) {
                 val h = Handler()
                 h.post {
-                    mClickerPlusListener!!.onOTAProgressChanged(deviceAddress!!, percent, speed, avgSpeed, currentPart, partsTotal)
+                    mClickerPlusListener!!.onOTAProgressChanged(deviceAddress!!, percent)
                 }
             }
         }
@@ -481,18 +553,21 @@ object ClickerPlus {
         }
     }
 
+
     private val response = BleWriteResponse { code ->
         Log.e(TAG, "Write OnResponse code " + code)
     }
+
+
     private val mNotifyRsp = object : BleNotifyResponse {
         override fun onNotify(service: UUID, character: UUID, value: ByteArray) {
             Log.e(TAG, "onNotify " + service.toString())
             if (service == SERVICE_UUID && character == NOTIFICATION_UUID) {
 
-                if (mClickerPlusListener != null){
-                    val h = Handler()
-                    h.post { mClickerPlusListener!!.onDataReceive(String.format("Notify: %s -> %d\n", ByteUtils.byteToString(value), Date().time)) }
-                }
+//                if (mClickerPlusListener != null){
+//                    val h = Handler()
+//                    h.post { mClickerPlusListener!!.onDataReceive(String.format("Notify: %s -> %d\n", ByteUtils.byteToString(value), Date().time)) }
+//                }
                 val parseResult = BLECMDUtil.parseCMD(value) ?: return
 //                Log.e(TAG, String.format("Notify: %s %d \n%d", ByteUtils.byteToString(parseResult.data), parseResult.id, Date().time))
                 when (parseResult.id){
@@ -755,6 +830,15 @@ object ClickerPlus {
                             h.post { mClickerPlusListener!!.onFindPhone() }
                         }
                     }
+                    BLECMDUtil.CMDID_VERSION -> {
+                        if (mClickerPlusListener != null) {
+                            val h = Handler()
+                            h.post {
+                                mClickerPlusListener!!.onVersion(BLECMDUtil.parseVersionCMD(parseResult.data))
+                            }
+                        }
+                    }
+
 
                 }
                 //                synchronized (BLEDetialActivity.this) {
@@ -796,6 +880,7 @@ object ClickerPlus {
             } else {
                 Log.e(TAG, "BleNotifyResponse failed" + code)
             }
+
         }
     }
 
