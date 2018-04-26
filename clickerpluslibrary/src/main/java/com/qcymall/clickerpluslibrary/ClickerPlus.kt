@@ -323,6 +323,8 @@ object ClickerPlus {
         if (!isConnect || mCurrentMac == null){
             return false
         }
+        mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
+                BLECMDUtil.createOTACMD(), response)
         val otaService = OTAService(mBluetoothClien!!, mCurrentMac!!)
         otaService.otaUpdate(filePath, mOTAListener)
         return true
