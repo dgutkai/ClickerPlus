@@ -45,6 +45,7 @@ object ClickerPlus {
 
 
     private var deviceType = 0
+    private var otaPath: String? = null
     private val SP_NAME = "ClickerPlus_sp"
     private var mBluetoothClien: BluetoothClient? = null
     var isConnect: Boolean = false
@@ -316,6 +317,18 @@ object ClickerPlus {
             return otaDialog(filePath)
         }
     }
+
+    fun changeMAC(mac: String):Boolean{
+        if (!isPair){
+            return false
+        }
+        if (!isConnect || mCurrentMac == null){
+            return false
+        }
+        mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
+                BLECMDUtil.createChangeMACCMD(mac), response)
+        return true
+    }
     private fun otaDialog(filePath: String): Boolean{
         if (!isPair){
             return false
@@ -325,8 +338,7 @@ object ClickerPlus {
         }
         mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
                 BLECMDUtil.createOTACMD(), response)
-        val otaService = OTAService(mBluetoothClien!!, mCurrentMac!!)
-        otaService.otaUpdate(filePath, mOTAListener)
+        otaPath = filePath
         return true
     }
     private fun otaDFU(context: Context, filePath: String): Boolean{
@@ -840,7 +852,15 @@ object ClickerPlus {
                             }
                         }
                     }
+                    BLECMDUtil.CMDID_CHANGE_MAC -> {
 
+                    }
+                    BLECMDUtil.CMDID_OTA -> {
+                        if (deviceType == 1){
+                            val otaService = OTAService(mBluetoothClien!!, mCurrentMac!!)
+                            otaService.otaUpdate(otaPath!!, mOTAListener)
+                        }
+                    }
 
                 }
                 //                synchronized (BLEDetialActivity.this) {

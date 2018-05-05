@@ -1,5 +1,6 @@
 package com.qcymall.clickerpluslibrary.utils
 
+import com.inuker.bluetooth.library.utils.ByteUtils
 import com.qcymall.clickerpluslibrary.adpcm.AdpcmUtils
 import java.util.*
 import kotlin.experimental.and
@@ -25,7 +26,7 @@ object BLECMDUtil {
     val CMDID_BATTERY = 0x5011      // 获取电池电量
     val CMDID_INCREASE = 0x5018      // 获取MIC增益
     val CMDID_VERSION  = 0x500F      // 获取版本号
-
+    val CMDID_CHANGE_MAC = 0x5019       // 更改MAC
 
     val CMDID_OTA = 0x5012      // OTA升级
     val CMDID_TIME = 0x5013     // 时间同步
@@ -186,6 +187,11 @@ object BLECMDUtil {
 
     fun createVersionCMD(): ByteArray{
         return packageCMD(CMDID_VERSION, null)
+    }
+
+    fun createChangeMACCMD(mac: String): ByteArray{
+
+        return packageCMD(CMDID_CHANGE_MAC, ByteUtils.stringToBytes(mac))
     }
 
     fun createIncreaseCMD(value: Int): ByteArray{

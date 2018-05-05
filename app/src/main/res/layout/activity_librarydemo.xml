@@ -140,6 +140,25 @@
         app:layout_constraintRight_toRightOf="parent"
         android:text="断开连接"
         android:onClick="disconnect"/>
+    <EditText
+        android:id="@+id/mac_edit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/readVersion_btn"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/ok_btn"
+        />
+    <Button
+        android:id="@+id/ok_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toRightOf="@id/mac_edit"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/readVersion_btn"
+        android:text="修改MAC"
+        android:onClick="changeMAC"
+        />
+
     <TextView
         android:id="@+id/info_txt"
         android:layout_width="0dp"

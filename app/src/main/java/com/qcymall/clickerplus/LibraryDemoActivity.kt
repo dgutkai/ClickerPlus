@@ -108,6 +108,10 @@ class LibraryDemoActivity: AppCompatActivity()  {
         // Todo: 修改升级文件路径
         ClickerPlus.otaUpdate(this, "/sdcard/A001/Smartisan_Clicker.img")
     }
+    fun changeMAC(v: View){
+        val editText = findViewById(R.id.mac_edit) as EditText
+        ClickerPlus.changeMAC(editText.text.toString())
+    }
     fun minincreaseClick(v: View){
         val editText = EditText(this)
         val dialog = AlertDialog.Builder(this).setTitle("输入值").setView(editText)
