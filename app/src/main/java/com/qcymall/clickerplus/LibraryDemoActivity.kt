@@ -109,7 +109,7 @@ class LibraryDemoActivity: AppCompatActivity()  {
         ClickerPlus.otaUpdate(this, "/sdcard/A001/Smartisan_Clicker.img")
     }
     fun changeMAC(v: View){
-        val editText = findViewById(R.id.mac_edit) as EditText
+        val editText = findViewById<EditText>(R.id.mac_edit)
         ClickerPlus.changeMAC(editText.text.toString())
     }
     fun minincreaseClick(v: View){
@@ -138,7 +138,18 @@ class LibraryDemoActivity: AppCompatActivity()  {
 
         })
     }
-
+    fun switchClick(v: View){
+        val tag = v.tag
+        if (tag == "0") {
+            v.tag = "1"
+            ClickerPlus.switchFind(true)
+            (v as Button).text = "关闭防丢"
+        }else{
+            v.tag = "0"
+            ClickerPlus.switchFind(false)
+            (v as Button).text = "打开防丢"
+        }
+    }
     fun readVersionClick(v: View){
         ClickerPlus.getVersion();
     }

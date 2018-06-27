@@ -27,6 +27,7 @@ object BLECMDUtil {
     val CMDID_INCREASE = 0x5018      // 获取MIC增益
     val CMDID_VERSION  = 0x500F      // 获取版本号
     val CMDID_CHANGE_MAC = 0x5019       // 更改MAC
+    val CMDID_SWITCH = 0x501A       // 防丢开关
 
     val CMDID_OTA = 0x5012      // OTA升级
     val CMDID_TIME = 0x5013     // 时间同步
@@ -181,6 +182,13 @@ object BLECMDUtil {
         return packageCMD(CMDID_FIND, null)
     }
 
+    fun createSwitchCMD(value: Boolean): ByteArray{
+        if (value){
+            return packageCMD(CMDID_SWITCH, byteArrayOf(1))
+        }else{
+            return packageCMD(CMDID_SWITCH, byteArrayOf(0))
+        }
+    }
     fun createBatteryCMD(): ByteArray{
         return packageCMD(CMDID_BATTERY, null)
     }

@@ -140,11 +140,11 @@ object ClickerPlus {
                         paritype = beancomItem.bytes.last()
                     }
                 }
-                if (device.name == "Smartisan Clicker+" || device.name == "Smartisan Clicker"){
-                    if (paritype == 0x01.toByte()){
+//                if (device.name == "Smartisan Clicker+" || device.name == "Smartisan Clicker"){
+//                    if (paritype == 0x01.toByte()){
                         searchResponse.onDeviceFounded(device)
-                    }
-                }
+//                    }
+//                }
 
             }
 
@@ -297,6 +297,17 @@ object ClickerPlus {
 
     }
 
+    fun switchFind(boolean: Boolean): Boolean{
+        if (!isPair){
+            return false
+        }
+        if (!isConnect || mCurrentMac == null){
+            return false
+        }
+        mBluetoothClien!!.write(mCurrentMac, SERVICE_UUID, WRITE_UUID,
+                BLECMDUtil.createSwitchCMD(boolean), response)
+        return true
+    }
     fun getVersion(): Boolean{
         if (!isPair){
             return false
@@ -855,11 +866,16 @@ object ClickerPlus {
                     BLECMDUtil.CMDID_CHANGE_MAC -> {
 
                     }
+
                     BLECMDUtil.CMDID_OTA -> {
                         if (deviceType == 1){
                             val otaService = OTAService(mBluetoothClien!!, mCurrentMac!!)
                             otaService.otaUpdate(otaPath!!, mOTAListener)
                         }
+                    }
+
+                    BLECMDUtil.CMDID_SWITCH -> {
+                        // 开启／关闭防丢
                     }
 
                 }
